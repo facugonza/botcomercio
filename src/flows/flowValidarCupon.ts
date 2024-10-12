@@ -139,7 +139,7 @@ const flowValidarCupon = addKeyword("cupon", { sensitive: false })
         await state.update({ cuponPhoto: localPath });
         return;
       } catch (error) {
-        console.error("CUPÓN ERROR > " + error.stack);
+        logger.error("CUPÓN ERROR > " + error.stack);
         return fallBack("Ocurrió un error, por favor reintenta!");
       }
     }
@@ -161,7 +161,7 @@ const flowValidarCupon = addKeyword("cupon", { sensitive: false })
 
         await sendEmail(ctx,state, files);
       } catch (error) {
-        console.error("Ocurrió un error, por favor reintenta!", error.stack);
+        emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
       }
     }
   );

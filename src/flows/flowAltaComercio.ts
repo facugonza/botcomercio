@@ -145,7 +145,7 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
         console.log("CONSTANCIA DE INSCRIPCIÓN > " + localPath);
         return;
       } catch (error) {
-        console.error("CONSTANCIA DE INSCRIPCIÓN ERROR > " + error.stack);
+        emailLogger.error("CONSTANCIA DE INSCRIPCIÓN ERROR > " + error.stack);
         return fallBack("Ocurrió un error, por favor reintenta!");
       }
     }
@@ -162,6 +162,7 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
         console.log("DNI TITULAR > " + localPath);
         return; 
       } catch (error) {
+        emailLogger.error("Error capturando la foto DNI en alta de comercio:",error.stack);
         return fallBack("Ocurrió un error, por favor reintenta!");
       }
     }
@@ -186,7 +187,7 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
 
         await sendEmail(files);
       } catch (error) {
-        console.error("Ocurrió un error, por favor reintenta!", error.stack);
+        emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
       }
     }
   );

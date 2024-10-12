@@ -5,6 +5,7 @@ import { addKeyword } from '@builderbot/bot';
 import { setComercioData } from "../models/merchantDATA";
 import { findMerchant } from "../services/merchantService";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { emailLogger } from '~/logger/logger';
 
 interface DatosComercio {
   cuit: string;
@@ -26,7 +27,7 @@ const desvincularComercio = async (datosCliente: DatosComercio): Promise<any> =>
         const response: AxiosResponse = await axios(config);
         return response.data;
     } catch (e) {
-        console.log("ERROR desvincularCuenta: " + e);
+        emailLogger.log("ERROR desvincular Cuenta: " + e.stack);
         return null;
     }
 };

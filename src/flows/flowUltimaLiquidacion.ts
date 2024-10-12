@@ -3,6 +3,7 @@ import { setComercioData } from '../models/merchantDATA';
 import { findMerchant } from '../services/merchantService';
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
+import { emailLogger, logger } from '~/logger/logger';
 
 
 const flowUltimaLiquidacion = addKeyword("liquidacion", { sensitive: false })
@@ -38,13 +39,13 @@ const flowUltimaLiquidacion = addKeyword("liquidacion", { sensitive: false })
 
                 } catch (error) {
                     await flowDynamic([{ body: "En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
-                    console.error(error);
+                    emailLogger.error("Error obteniendo Liquidacion Comercio ",error.stack);
                 }
 
                 setComercioData(ctx, {});
                 return endFlow("Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tenes suerte, tenes DATA!*");
             } else {
-                console.log(`Comercio no encontrado, length: ${Object.keys(comercio).length}`);
+                logger.warn(`Comercio no encontrado, length: ${Object.keys(comercio).length}`);
             }
         }
     );

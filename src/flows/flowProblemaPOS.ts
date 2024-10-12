@@ -63,8 +63,8 @@ async function createDirectoryIfNotExists(directory: string) {
             mkdirSync(directory);
         }
     } catch (error) {
-        console.log(error);
-        console.error("ERROR createDirectoryIfNotExists :", error.stack);
+        logger.error("Errror > createDirectoryIfNotExists ",error.stack);
+        emailLogger.error("ERROR createDirectoryIfNotExists :", error.stack);
     }
 }
 
@@ -83,10 +83,9 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
             await createDirectoryIfNotExists(merchantImagesDirectory);
             try {
                 const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
-                console.log("Imagen del error > " + localPath);
                 await state.update({ errorPhoto: localPath });
             } catch (error) {
-                console.error("Error al guardar la imagen > " + error.stack);
+                emailLogger.error("Error al guardar la imagen > " + error.stack);
                 return fallBack("Ocurrió un error, por favor reintenta!");
             }
         }
@@ -105,7 +104,7 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
 
             await sendEmail(state, files);
         } catch (error) {
-            console.error("Ocurrió un error, por favor reintenta!", error.stack);
+            emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
         }
     });
 

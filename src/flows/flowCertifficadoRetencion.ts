@@ -4,6 +4,7 @@ import { findMerchant } from '../services/merchantService';
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
 import { Certificate } from 'crypto';
+import { emailLogger } from '~/logger/logger';
 
 // Define un tipo para el cliente si no existe ya
 interface Cliente {
@@ -14,7 +15,7 @@ interface Cliente {
     hasVisaSummary?: boolean;
 }
 
-const flowUltimaLiquidacion = addKeyword("retencion", { sensitive: false })
+const flowUltimaLiquidacion = addKeyword("CERTFICADO", { sensitive: false })
     .addAnswer(".",
         { delay: 500 },
         async (ctx: any, { endFlow, flowDynamic }: any) => {
@@ -47,7 +48,7 @@ const flowUltimaLiquidacion = addKeyword("retencion", { sensitive: false })
 
                 } catch (error) {
                     await flowDynamic([{ body: "En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
-                    console.error(error);
+                    emailLogger.error(error);
                 }
 
                 setComercioData(ctx, {});
