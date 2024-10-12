@@ -9,6 +9,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true, // Añade esta línea
     "sourceMap": false,
     "outDir": "./dist",
     "baseUrl": "./",

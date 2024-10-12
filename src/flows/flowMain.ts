@@ -7,7 +7,6 @@ import flowSoyComercio from "./flowSoyComercio";
 import flowPrincipal from "./flowPrincipal";
 import { logger, emailLogger } from '../logger/logger';
 import databaseLogger from '../logger/databaseLogger';
-import { getComercioData } from "../models/merchantDATA";
 import acciones from '../models/actions';
 
 // Función principal del flujo, utilizando tipos de TypeScript

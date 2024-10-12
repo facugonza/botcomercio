@@ -3,7 +3,6 @@ import { setComercioData } from '../models/merchantDATA';
 import { findMerchant } from '../services/merchantService';
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
-import { Certificate } from 'crypto';
 import { emailLogger } from '~/logger/logger';
 
 // Define un tipo para el cliente si no existe ya

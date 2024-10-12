@@ -1,11 +1,11 @@
-//import dotenv from "dotenv";
-//dotenv.config();
-
 import { addKeyword } from '@builderbot/bot';
 import { setComercioData } from "../models/merchantDATA";
 import { findMerchant } from "../services/merchantService";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { emailLogger } from '~/logger/logger';
+import databaseLogger from '../logger/databaseLogger';
+import acciones from '../models/actions';
+
 
 interface DatosComercio {
   cuit: string;
@@ -37,6 +37,12 @@ const flowDesvincular = addKeyword("desvincular", { sensitive: false })
         "¿Confirmas desvincular este número de teléfono ? Responde *SI o NO* para confirmar o cancelar.",
         { capture: true },
         async (ctx: any, { endFlow, flowDynamic }: any) => {
+            
+            databaseLogger.addLog(
+                ctx.from,
+                acciones.DESVINCULAR
+            );
+                      
             const comercio = await findMerchant(ctx);
             if (Object.keys(comercio).length > 0) {
                 if (ctx.body.toLowerCase() === "si") {
