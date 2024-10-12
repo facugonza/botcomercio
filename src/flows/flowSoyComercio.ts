@@ -25,7 +25,9 @@ const flowSoyComercio = addKeyword("SoyComercioDeTarjetaDATA", { sensitive: fals
       "*-* Tengo problemas con mi equipo de POS. Responde *POS*",
       //"*-* Acelerar mi liquidación. Responde *ACELERAR*",      
       //"*-* Reclamo de liquidación o cupón no liquidado. Responde *RECLAMO*",
-      "*-* Desvincular este número de teléfono del comercio. Responde *DESVINCULAR*"
+      "*-* Desvincular este número de teléfono del comercio. Responde *DESVINCULAR*",
+      " ",
+      "*Por algún incoveniente en ventas, comunícate al 4292002 o 4292003 en horario comercial.*"
     ],
     { capture: true },
     async (ctx, { endFlow, fallBack }) => {
@@ -49,5 +51,7 @@ const flowSoyComercio = addKeyword("SoyComercioDeTarjetaDATA", { sensitive: fals
       flowDesvincular
     ]
   );
+  
+
 
 export default flowSoyComercio;
