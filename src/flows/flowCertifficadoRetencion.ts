@@ -14,7 +14,7 @@ interface Cliente {
     hasVisaSummary?: boolean;
 }
 
-const flowUltimaLiquidacion = addKeyword("CERTFICADO", { sensitive: false })
+const flowUltimaLiquidacion = addKeyword("CERTIFICADO", { sensitive: false })
     .addAnswer(".",
         { delay: 500 },
         async (ctx: any, { endFlow, flowDynamic }: any) => {

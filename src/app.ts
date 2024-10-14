@@ -24,14 +24,14 @@ import flowRetencion from './flows/flowCertifficadoRetencion';
 //import flowReclamo from "./flows/flowReclamo";
 //import flowDesvincular from "./flows/flowDesvincular";
 
-const PORT: number = +(process.env.PORT ?? 3008);
+const PORT: number = +(process.env.PORT ?? 3099);
 
 // Configuración para la base de datos MySQL
 const MYSQL_DB_HOST = process.env.MYSQL_DB_HOST ?? "localhost";
 const MYSQL_DB_USER = process.env.MYSQL_DB_USER ?? "root";
 const MYSQL_DB_PASSWORD = process.env.MYSQL_DB_PASSWORD ?? "password";
 const MYSQL_DB_NAME = process.env.MYSQL_DB_NAME ?? "databot";
-const MYSQL_DB_PORT = process.env.MYSQL_DB_PORT ?? "3018";
+const MYSQL_DB_PORT = process.env.MYSQL_DB_PORT ?? "3306";
 
 const main = async () => {
 
