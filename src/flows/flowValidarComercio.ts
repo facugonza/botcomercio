@@ -7,10 +7,6 @@ import acciones from '../models/actions';
 const asociarComercio = async (datosComercio: any) => {
   try {
     console.log("asociarComercio DATOS: " + JSON.stringify(datosComercio));
-    databaseLogger.addLog(
-      datosComercio.numeroComercio,
-      acciones.VINCULAR
-    );
 
     const config = {
       method: "POST",
@@ -100,6 +96,12 @@ const flowValidarComercio = addKeyword("vincular", { sensitive: false })
       const comercio = await asociarComercio(state.getMyState());
       console.log("flowValidarComercio último addAnswer: " + comercio);        
       if (comercio != null && comercio.isLogin) {
+        
+        databaseLogger.addLog(
+          comercio.numeroComercio,
+          acciones.VINCULAR
+        );
+    
         await flowDynamic("¡Felicitaciones! Hemos asociado este número (*+" + ctx.from + "*) al comercio: " + comercio.descripcion + " (CUIT: " + comercio.cuit + "). ¡Gracias por registrarte!");
         return endFlow("Por favor, envía un mensaje nuevamente para iniciar como comercio registrado.");
       } else {

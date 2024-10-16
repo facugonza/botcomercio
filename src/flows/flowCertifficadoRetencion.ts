@@ -21,7 +21,7 @@ const flowUltimaLiquidacion = addKeyword("CERTIFICADO", { sensitive: false })
             
             databaseLogger.addLog(
                 ctx.from,
-                acciones.DESCARGAR_LIQUIDACION
+                acciones.DESCARGAR_RETENCION
             );
 
             const comercio = await findMerchant(ctx);

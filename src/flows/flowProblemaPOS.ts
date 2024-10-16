@@ -79,10 +79,13 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
     .addAnswer('*Ahora, por favor envíame una foto del error que aparece en el POS.*',
         { capture: true },
         async (ctx, { fallBack, provider, state }) => {
-            const merchantImagesDirectory = `./comercios/${ctx.from}/pos`;
-            await createDirectoryIfNotExists(merchantImagesDirectory);
+            const merchantRootDirectory = `./comercios/${ctx.from}`;
+            await createDirectoryIfNotExists(merchantRootDirectory);
+
+            const merchantPOSDirectory = `./comercios/${ctx.from}/POS`;
+            await createDirectoryIfNotExists(merchantPOSDirectory);
             try {
-                const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
+                const localPath = await provider.saveFile(ctx, { path: merchantPOSDirectory });
                 await state.update({ errorPhoto: localPath });
             } catch (error) {
                 emailLogger.error("Error al guardar la imagen > " + error.stack);

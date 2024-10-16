@@ -45,12 +45,12 @@ async function sendEmail(ctx, state: any, files: { path: string; name: string; }
 
     const mailOptions = {
       from: "facundogonzalez@tarjetadata.com.ar",
-      to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacongonzalez@gmail.com",
+      to: " facugonza@gmail.com, angelachacongonzalez@gmail.com",
       subject: "Solicitud de Validación de Cupón - Número de Cupón: " + state.getMyState().numero + " de comercio N° " +comercio.nroempresa ,
       html: bodyHtml,
       attachments: attachments,
     };
-
+//luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar,
     await transporter.sendMail(mailOptions);
     console.log("Email enviado exitosamente!");
 
@@ -76,7 +76,7 @@ async function createDirectoryIfNotExists(directory: string) {
 }
 
 // Flujo de alta de comercio y validación de cupón
-const flowValidarCupon = addKeyword("cupon", { sensitive: false })
+const flowValidarCupon = addKeyword("validar", { sensitive: false })
   .addAnswer(
     "Perfecto !! Para validar un cupón, por favor, proporciona el número de cupón.",
     { capture: true },
@@ -131,10 +131,14 @@ const flowValidarCupon = addKeyword("cupon", { sensitive: false })
     "*Por favor, envíame una foto del cupón.* (Esto es obligatorio)",
     { capture: true },
     async (ctx, { fallBack, provider, state }) => {
-      const merchantImagesDirectory = `./comercios/${ctx.from}/cupon`;
-      await createDirectoryIfNotExists(merchantImagesDirectory);
+      const merchantRootDirectory = `./comercios/${ctx.from}`;
+      await createDirectoryIfNotExists(merchantRootDirectory);
+
+      const merchantCuponDirectory = `./comercios/${ctx.from}/cupon`;
+      await createDirectoryIfNotExists(merchantCuponDirectory);
+      
       try {
-        const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
+        const localPath = await provider.saveFile(ctx, { path: merchantCuponDirectory });
         console.log("CUPÓN > " + localPath);
         await state.update({ cuponPhoto: localPath });
         return;
