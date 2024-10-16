@@ -1,3 +1,4 @@
+// Cambiar todas las importaciones de `import` a `require()`
 import { createPool, Pool, RowDataPacket, ResultSetHeader } from 'mysql2';
 import nodemailer from 'nodemailer';
 import schedule from 'node-schedule';
@@ -10,17 +11,16 @@ interface MessageCountRow extends RowDataPacket {
 
 // Definir un tipo para los resultados de la consulta de palabras clave
 interface KeywordCountRow extends RowDataPacket {
-  Saldo_Count: number;
-  Movimientos_Count: number;
-  Prestamo_Count: number;
-  Resumen_Count: number;
-  Operador_Count: number;
-  Promos_Count: number;
-  Pagar_Count: number;
-  Solicitar_Count: number;
+  Altas_Count: number;
+  Liquidacion_Count: number;
+  Certificado_Count: number;
+  Asesor_Count: number;
+  Validar_Cupon_Count: number;
+  POS_Count: number;
+  Desvincular_Count: number;
+  NOCOMERCIO_Count: number;
   Requisitos_Count: number;
-  No_Cliente_Count: number;
-  Registros_Count: number;
+  ADHERIR_Count: number;
   Home_Count: number;
 }
 
@@ -52,7 +52,7 @@ async function sendEmail(): Promise<void> {
     // Consulta de mensajes por teléfono
     const [results] = await connection.query<MessageCountRow[]>(`
       SELECT telefono, COUNT(*) AS message_count
-      FROM messages
+      FROM messagescomercio
       WHERE DATE(fecha_hora) = CURDATE()
       GROUP BY telefono
       ORDER BY message_count DESC;
@@ -61,18 +61,18 @@ async function sendEmail(): Promise<void> {
     // Consulta de palabras clave
     const [keywordResults] = await connection.query<KeywordCountRow[]>(`
       SELECT 
-        SUM(accion = 'NUEVO_COMERCIO_REGISTRADO') AS 'Altas_Count',
-        SUM(accion = 'DESCARGAR_LIQUIDACION') AS 'Liquidacion_Count',
-        SUM(accion = 'DESCARGAR_RETENCION') AS 'Certificado_Count',
-        SUM(accion = 'SOLICITAR_ASESOR') AS 'Asesor_Count',
-        SUM(accion = 'VALIDAR_CUPON') AS 'Validar_Cupon_Count',
-        SUM(accion = 'PROBLEMA_POS') AS 'POS_Count',
-        SUM(accion = 'DESVINCULAR') AS 'Desvincular_Count',
-        SUM(accion = 'MENU_NO_COMERCIO') AS 'NOCOMERCIO_Count',
-        SUM(accion = 'REQUISITOS') AS 'Requisitos_Count',
-        SUM(accion = 'ADHERIR') AS 'ADHERIR_Count',
-        SUM(accion = 'MENU_PRINCIPAL') AS 'Home_Count'
-      FROM messages
+      IFNULL(SUM(accion = 'NUEVO_COMERCIO_REGISTRADO'), 0) AS 'Altas_Count',
+      IFNULL(SUM(accion = 'DESCARGAR_LIQUIDACION'), 0) AS 'Liquidacion_Count',
+      IFNULL(SUM(accion = 'DESCARGAR_RETENCION'), 0) AS 'Certificado_Count',
+      IFNULL(SUM(accion = 'SOLICITAR_ASESOR'), 0) AS 'Asesor_Count',
+      IFNULL(SUM(accion = 'VALIDAR_CUPON'), 0) AS 'Validar_Cupon_Count',
+      IFNULL(SUM(accion = 'PROBLEMA_POS'), 0) AS 'POS_Count',
+      IFNULL(SUM(accion = 'DESVINCULAR'), 0) AS 'Desvincular_Count',
+      IFNULL(SUM(accion = 'MENU_NO_COMERCIO'), 0) AS 'NOCOMERCIO_Count',
+      IFNULL(SUM(accion = 'REQUISITOS'), 0) AS 'Requisitos_Count',
+      IFNULL(SUM(accion = 'ADHERIR'), 0) AS 'ADHERIR_Count',
+      IFNULL(SUM(accion = 'MENU_PRINCIPAL'), 0) AS 'Home_Count'
+      FROM messagescomercio
       WHERE DATE(fecha_hora) = CURDATE()
     `);
 
@@ -95,10 +95,10 @@ async function sendEmail(): Promise<void> {
 
     emailContent += '<h3>Resumen de palabras clave para el día actual:</strong></h3>';
     emailContent += '<table border="1" cellpadding="5" cellspacing="0">';
-    emailContent += '<tr><th>Saldo</th><th>Movimientos</th><th>Prestamo</th><th>Resumen</th><th>Operador</th><th>Promos</th><th>Pagar</th><th>Solicitar</th><th>Requisitos</th><th>No Cliente</th><th>Registros</th><th>Home</th></tr>';
+    emailContent += '<tr><th>NuevoComercio</th><th>Liquidacion</th><th>Retencion</th><th>Asesor</th><th>Cupon</th><th>POS</th><th>Desvincular</th><th>NOComercio</th><th>Requisitos</th><th>Adherir</th><th>Home</th></tr>';
 
     keywordResults.forEach(keywordRow => {
-      emailContent += `<tr><td>${keywordRow.Saldo_Count}</td><td>${keywordRow.Movimientos_Count}</td><td>${keywordRow.Prestamo_Count}</td><td>${keywordRow.Resumen_Count}</td><td>${keywordRow.Operador_Count}</td><td>${keywordRow.Promos_Count}</td><td>${keywordRow.Pagar_Count}</td><td>${keywordRow.Solicitar_Count}</td><td>${keywordRow.Requisitos_Count}</td><td>${keywordRow.No_Cliente_Count}</td><td>${keywordRow.Registros_Count}</td><td>${keywordRow.Home_Count}</td></tr>`;
+      emailContent += `<tr><td>${keywordRow.Altas_Count}</td><td>${keywordRow.Liquidacion_Count}</td><td>${keywordRow.Certificado_Count}</td><td>${keywordRow.Asesor_Count}</td><td>${keywordRow.Validar_Cupon_Count}</td><td>${keywordRow.POS_Count}</td><td>${keywordRow.Desvincular_Count}</td><td>${keywordRow.NOCOMERCIO_Count}</td><td>${keywordRow.Requisitos_Count}</td><td>${keywordRow.ADHERIR_Count}</td><td>${keywordRow.Home_Count}</td></tr>`;
     });
 
     emailContent += '</table>';
@@ -125,7 +125,7 @@ async function sendEmail(): Promise<void> {
     const todayDate = getFormattedDate();
     const mailOptions = {
       from: 'facundogonzalez@tarjetadata.com.ar',
-      to: 'facugonza@gmail.com',
+      to: 'angelachacongonzalez@gmail.com',
       subject: `Cantidad de Personas Atendidas hoy: (${todayDate})`,
       html: emailContent,
     };
@@ -135,7 +135,6 @@ async function sendEmail(): Promise<void> {
 
   } catch (error) {
     console.error('Error enviando el correo:', error);
-    //logger.error('Error enviando el correo:', error);
   }
 }
 
