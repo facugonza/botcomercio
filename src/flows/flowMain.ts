@@ -13,34 +13,35 @@ import acciones from '../models/actions';
 const flowMain = addKeyword(EVENTS.WELCOME)
   .addAnswer(
     [
-      "Hola, soy *DATABOT* tu asistente virtual para comercios.",
-      "*Aguarda un instante, estoy verificando si este número está asociado a un comercio....*"
+      "👋 *Hola, soy DATABOT,* tu asistente virtual para comercios.",
+      "⏳ *Aguarda un instante, estoy verificando si este número está asociado a un comercio...*",
     ],
     null,
     async (ctx, { gotoFlow, flowDynamic }) => {
       try {
         // Registramos el evento en el log de la base de datos
-        databaseLogger.addLog(
-          ctx.from,
-          acciones.HOME
-        );
+        databaseLogger.addLog(ctx.from, acciones.HOME);
 
         // Buscamos si el número está asociado a un comercio
         const comercio = await findMerchant(ctx);
 
         if (comercio && comercio.isLogin) {
           // Si se encuentra un comercio asociado, se personaliza la respuesta
-          await flowDynamic(`Bienvenido, ${comercio.descripcion}! ¿En qué puedo ayudarte hoy?`);
-          
+          await flowDynamic(
+            `🎉 *Bienvenido, ${comercio.descripcion}!* ¿En qué puedo ayudarte hoy?`
+          );
+
           return gotoFlow(flowSoyComercio); // Flujo específico para comercios
         } else {
           // Si no se encuentra ningún comercio asociado
-          await flowDynamic("Bienvenido! Parece que este número no está asociado a ningún comercio.");
+          await flowDynamic(
+            "👋 *¡Bienvenido!* Parece que este número no está asociado a ningún comercio. 📋"
+          );
           return gotoFlow(flowPrincipal); // Flujo general
         }
       } catch (error) {
-          logger.error((error as Error).stack);
-          emailLogger.error((error as Error).stack);
+        logger.error((error as Error).stack);
+        emailLogger.error((error as Error).stack);
       }
     }
   );
