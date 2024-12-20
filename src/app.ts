@@ -5,6 +5,8 @@ import { createBot, createProvider, createFlow, addKeyword, utils } from '@build
 import { MemoryDB as Database } from '@builderbot/bot';
 import { BaileysProvider as Provider } from '@builderbot/provider-baileys';
 
+
+
 import https from 'https';
 
 // Importaciones adaptadas para Comercio
@@ -15,6 +17,7 @@ import flowNoSoyComercio from './flows/flowNoSoyComercio';
 import flowSoyComercio from './flows/flowSoyComercio';
 import flowLiquidacion from './flows/flowUltimaLiquidacion';
 import flowPrincipal from './flows/flowPrincipal';
+import flowVender from "./flows/flowVender";
 import flowRetencion from './flows/flowCertifficadoRetencion';
 //import flowPlanes from "./flows/flowPlanes";
 //import flowAcelerarLiquidacion from "./flows/flowAcelerarLiquidacion";
@@ -41,6 +44,7 @@ const main = async () => {
         flowSoyComercio,
         flowLiquidacion,
         flowNoSoyComercio,
+        flowVender,
         //flowAltaComercio,
         flowValidarComercio,
         flowPrincipal,
@@ -65,13 +69,14 @@ const main = async () => {
     });
 
     // Ruta de salud para el servidor
-    adapterProvider.server.get('/health', (req, res) => {
-        const number = "5492644736151";
-        const message = "DATABOT ALIVE";
+    adapterProvider.server.post('/notifySale', (req, res) => {
+        //const number = "5492645061911";
+        //const message = "DATABOT ALIVE";//info de venta 
+        const { number, message } = req.body;
         try {
             console.log("SENDING MESSAGE TO : " + number);
             adapterProvider.sendMessage(number, message, { media: null });
-            console.log("MESSAGE SENT: " + "DATABOT COMERCIO ALIVE" + " to " + number);
+            console.log("MESSAGE SENT: " + "SALE DATA" + " to " + number);
     
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('OK');
