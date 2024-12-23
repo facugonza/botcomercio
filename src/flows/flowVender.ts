@@ -121,19 +121,21 @@ const obtenerCliente = async (dni: string): Promise<any> => {
                 return fallBack("❌ No encontramos al cliente en el sistema. Por favor, verifica los datos.");
             }
 
-            if (!cliente.nombre || !cliente.apellido || !cliente.disponible) {
+            if (!cliente.nombre || !cliente.apellido || !cliente.disponible || !cliente.plastico || !cliente.vtotarjeta) {
                 return fallBack("❌ No se pudo obtener el nombre del cliente. Intenta nuevamente.");
             }
 
             const nombreCompleto = `${cliente.apellido} ${cliente.nombre}`;
             const disponible = cliente.disponible;
             const telefonoCliente = cliente.telefono;
+            const vtoTarjeta = cliente.vtotarjeta;
+            const plastico = cliente.plastico;
 
  
             console.log(`Cliente validado: ${nombreCompleto}, Disponible limpio: ${disponible}, Teléfono: ${telefonoCliente}`);
 
             // Guardar el nombre y el disponible en el estado
-            await state.update({ nombreCliente: nombreCompleto, disponible, telefonoCliente });
+            await state.update({ nombreCliente: nombreCompleto, disponible, telefonoCliente, vtoTarjeta, plastico });
 
             await flowDynamic([
                 {
@@ -341,73 +343,60 @@ const obtenerCliente = async (dni: string): Promise<any> => {
             }
     
             console.log("Venta confirmada para el cliente:", state.get("nombreCliente"));
-            console.log("Detalles de la venta:", {
-                monto: state.get("monto"),
-                plan: state.get("descripcionPlan"),
-                cuotas: state.get("cuotasSeleccionadas"),
-            });
     
-            
-            await flowDynamic([
-                {
-                    body: `✅ *Genial, enviamos tu solicitud de pago al cliente.* Apenas recibamos su confirmación, te haremos saber. Gracias.\n\n*¡Tenés Suerte, Tenés Data!*`,
+            // Obtener datos del estado
+            const nombreCliente = state.get("nombreCliente");
+            const dni = state.get("dni");
+            const monto = state.get("monto");
+            const cuotasSeleccionadas = state.get("cuotasSeleccionadas");
+            const descripcionPlan = state.get("descripcionPlan");
+            const telefonoCliente = state.get("telefonoCliente");
+            const plastico = state.get("plastico");
+            const vtoTarjeta = state.get("vtoTarjeta");
+            const nroComercio = state.get("nrocomercio") || 1;
+            const nroPlan = state.get("planSeleccionado");
+    
+            // Estructurar los datos en un JSON
+            const dataVenta = {
+                venta: {
+                    cliente: {
+                        nombre: nombreCliente,
+                        dni: dni,
+                        telefono: telefonoCliente,
+                        plastico: plastico,
+                        vtoTarjeta: vtoTarjeta,
+                    },
+                    detalleVenta: {
+                        monto: parseFloat(monto),
+                        cuotas: cuotasSeleccionadas,
+                        descripcionPlan: descripcionPlan,
+                        nroComercio: nroComercio,
+                        nroPlan: nroPlan,
+                    },
                 },
-            ]);
+            };
+    
+            console.log("Datos estructurados para envío:", dataVenta);
+    
+            try {
+                // Convertir el objeto JSON a string antes de enviarlo
+                const jsonVenta = JSON.stringify(dataVenta);
+    
+                // Enviar la data como JSON al endpoint o al teléfono fijo
+                await notifySale(FIXED_PHONE_NUMBER, jsonVenta);
+    
+                // Confirmar el envío al comercio
+                await flowDynamic([
+                    {
+                        body: `✅ *Genial, enviamos tu solicitud de pago al cliente.* Apenas recibamos su confirmación, te haremos saber. Gracias.\n\n💡 *¡Tenés Suerte, Tenés Data!*`,
+                    },
+                ]);
+            } catch (error) {
+                console.error("Error al notificar la venta:", error.message);
+                return fallBack("❌ Ocurrió un problema al notificar la venta. Por favor, inténtalo nuevamente.");
+            }
         }
     );
     
     
-    
-    
-    
-    /*.addAnswer(
-        
-    
-            // Obtener datos del cliente y venta del estado
-            const nombreCliente = state.get ? state.get("nombreCliente") : state["nombreCliente"];
-            const dni = state.get("dni");
-            const monto = state.get("monto");
-            const cuotas = state.get("opcionesCuotas");
-            const nrocomercio = state.get("nrocomercio");
-            const nroplan = state.get("nroplan");
-            const descripcion = state.get("descripcion") || "Sin descripción";
-            //const telefonoCliente = state.get("telefonoCliente"); // Se asume que se guarda el teléfono en el estado previamente
-    
-            // Estructurar los datos en un JSON
-            const dataVenta = {
-
-                venta: {
-                    nombre: nombreCliente,
-                    dni: dni,
-                    telefono: telefonoCliente, // Agregar el teléfono del cliente desde el JSON de la API
-                    monto: parseFloat(monto), // Asegurarnos de enviar el monto como número
-                    cuotas: parseInt(cuotas, 10), // Convertir cuotas a número
-                    descripcion: descripcion,
-                },
-            };
-    
-            const cliente = {
-                cliente: {
-                    nombre: nombreCliente,
-                    dni: dni,
-                    telefono: telefonoCliente, // Agregar el teléfono del cliente desde el JSON de la API
-                    plastico: parseFloat(monto), // Asegurarnos de enviar el monto como número
-                    vtoplastico: parseInt(cuotas, 10)
-                },
-            };
-
-            try {
-                // Convertir el objeto JSON a string antes de enviarlo
-                const jsonVenta = await makeJonSale(cliente,venta);
-                
-                // Enviar la data como JSON en formato string al endpoint
-                await notifySale(FIXED_PHONE_NUMBER, jsonVenta);
-                //PUSH TO REDIS  >>> 
-
-            } catch (error) {
-                console.error("Error al notificar la venta:", error.message);
-                return fallBack("Ocurrió un problema al notificar la venta. Por favor, inténtalo nuevamente.");
-            }
-        }
-    );*/
     export default flowVender;
