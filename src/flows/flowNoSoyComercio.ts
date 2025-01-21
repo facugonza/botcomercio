@@ -11,8 +11,8 @@ const opcionesPermitidas = ["SOLICITAR", "REQUISITOS"];
 const flowNoSoyComercio = addKeyword(["informacion", "información"], { sensitive: false })
   .addAnswer(
     [
-      "*-* Si deseas registrar tu comercio, responde *SOLICITAR*.", "",
-      "*-* Si quieres conocer los requisitos para registrar tu comercio, responde *REQUISITOS*.",
+      "*-* 🔹  Si deseas registrar tu comercio, responde *SOLICITAR*.", "",
+      "*-* 🔹  Si quieres conocer los requisitos para registrar tu comercio, responde *REQUISITOS*.",
     ],
     { capture: true },
     async (ctx, { fallBack }) => {
@@ -23,7 +23,7 @@ const flowNoSoyComercio = addKeyword(["informacion", "información"], { sensitiv
       );
 
       if (!opcionesPermitidas.includes(ctx.body.toUpperCase())) {
-        return fallBack("Lo siento, *" + ctx.body + "* no es una opción válida. Por favor, intenta de nuevo. *(SOLICITAR, REQUISITOS)*");
+        return fallBack("❌ Lo siento, *" + ctx.body + "* no es una opción válida. Por favor, intenta de nuevo. *(SOLICITAR, REQUISITOS)*");
       }
     },
     [flowAltaComercio, flowRequisitosComercio] // Flujos adaptados para comercio

@@ -22,28 +22,28 @@ const flowUltimaLiquidacion = addKeyword("liquidacion", { sensitive: false })
                 try {
                     if (comercio.lastorden){
                         await flowDynamic([{
-                            body: `Obteniendo tu última Liquidacion DATA generado con fecha ${comercio.lastordenfecha}. *Aguarda unos instantes...*`
+                            body: `📄  Obteniendo tu última Liquidacion DATA generado con fecha ${comercio.lastordenfecha}. *Aguarda unos instantes...*`
                         }]);
                         
                         const resumenURL = `https://chatbot.tarjetadata.com.ar/AppMovil/ComercioOrdenPDF?nroorden=${comercio.lastorden}`;
                         
                         await flowDynamic([{
-                            body: `Liquidacion N° ${comercio.lastorden}`,
+                            body: `📄  Liquidacion N° ${comercio.lastorden}`,
                             media: resumenURL,
                         }]);
                     }else {
                         await flowDynamic([{
-                            body: `No se encontraron Liquidaciones Generadas a la fecha.`
+                            body: `📭 No se encontraron Liquidaciones Generadas a la fecha.`
                         }]);
                     }
 
                 } catch (error) {
-                    await flowDynamic([{ body: "En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
+                    await flowDynamic([{ body: "❌ En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
                     emailLogger.error("Error obteniendo Liquidacion Comercio ",error.stack);
                 }
 
                 setComercioData(ctx, {});
-                return endFlow("Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tenes suerte, tenes DATA!*");
+                return endFlow("✅ Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tenes suerte, tenes DATA!*");
             } else {
                 logger.warn(`Comercio no encontrado, length: ${Object.keys(comercio).length}`);
             }

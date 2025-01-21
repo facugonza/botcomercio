@@ -10,16 +10,17 @@ const opcionesPermitidas = ["VINCULAR", "INFORMACION", "INFORMACIÓN","FAQ"];
 const flowPrincipalComercio = addKeyword("flowPrincipalTelefonoNoAsociadoComercio", { sensitive: false })
   .addAnswer(
     [
-      "*-* Si ya eres un comercio registrado en DATA y necesitas vincular este numero responde *VINCULAR*.", 
+      "📋 *Opciones disponibles para comercios:*\n",
+      "🔹 *Si ya eres un comercio registrado en DATA y necesitas vincular este número,* responde *VINCULAR*.",
       "",
-      "*-* Si aún no estás registrado como comercio y deseas obtener información, responde con la palabra *INFORMACION*.",
-      "", 
-      "*-* Preguntas frecuentes. Responde *FAQ*", 
+      "🔹 *Si aún no estás registrado como comercio y deseas obtener información,* responde con la palabra *INFORMACION*.",
+      "",
+      "🔹 *Preguntas frecuentes:* Responde *FAQ*.",
     ],
     { capture: true },
     async (ctx, { fallBack }) => {
       if (!opcionesPermitidas.includes(ctx.body.toUpperCase())) {
-        return fallBack("Lo siento, *" + ctx.body + "* no es una opción válida. Por favor, intenta de nuevo. *(VINCULAR, INFORMACION,FAQ)*");
+        return fallBack("❌ Lo siento, *" + ctx.body + "* no es una opción válida. Por favor, intenta de nuevo. *(VINCULAR, INFORMACION,FAQ)*");
       }
     },
     [flowValidarComercio, flowNoSoyComercio,flowFAQ] // Flujos adaptados para comercio

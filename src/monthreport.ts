@@ -1,31 +1,9 @@
-// Cambiar todas las importaciones de `import` a `require()`
-import { createPool, Pool, RowDataPacket, ResultSetHeader } from 'mysql2';
-import nodemailer from 'nodemailer';
-import schedule from 'node-schedule';
-
-// Definir un tipo para los resultados de la consulta de mensajes
-interface MessageCountRow extends RowDataPacket {
-  telefono: string;
-  message_count: number;
-}
-
-// Definir un tipo para los resultados de la consulta de palabras clave
-interface KeywordCountRow extends RowDataPacket {
-  Altas_Count: number;
-  Liquidacion_Count: number;
-  Certificado_Count: number;
-  Asesor_Count: number;
-  Validar_Cupon_Count: number;
-  POS_Count: number;
-  Desvincular_Count: number;
-  NOCOMERCIO_Count: number;
-  Requisitos_Count: number;
-  ADHERIR_Count: number;
-  Home_Count: number;
-}
+const { createPool } = require('mysql2');
+const nodemailer = require('nodemailer');
+const schedule = require('node-schedule');
 
 // Configuración de la conexión de la base de datos
-const pool: Pool = createPool({
+const pool = createPool({
   host: 'localhost',
   user: 'root',
   password: 'password', // Cambia a variables de entorno en producción
@@ -36,7 +14,7 @@ const pool: Pool = createPool({
 });
 
 // Función para obtener la fecha formateada
-function getFormattedDate(): string {
+function getFormattedDate() {
   const date = new Date();
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -45,21 +23,21 @@ function getFormattedDate(): string {
 }
 
 // Función para enviar el correo electrónico
-async function sendEmail(): Promise<void> {
+async function sendEmail() {
   try {
     const connection = pool.promise();
 
     // Consulta de mensajes por teléfono
-    const [results] = await connection.query<MessageCountRow[]>(`
+    const [results] = await connection.query(`
       SELECT telefono, COUNT(*) AS message_count
       FROM messagescomercio
-      WHERE DATE(fecha_hora) = CURDATE()
+      WHERE DATE(fecha_hora) BETWEEN '2024-12-01' AND '2024-12-31'
       GROUP BY telefono
       ORDER BY message_count DESC;
     `);
 
     // Consulta de palabras clave
-    const [keywordResults] = await connection.query<KeywordCountRow[]>(`
+    const [keywordResults] = await connection.query(`
       SELECT 
       IFNULL(SUM(accion = 'NUEVO_COMERCIO_REGISTRADO'), 0) AS 'Altas_Count',
       IFNULL(SUM(accion = 'DESCARGAR_LIQUIDACION'), 0) AS 'Liquidacion_Count',
@@ -122,11 +100,10 @@ async function sendEmail(): Promise<void> {
       }
     });
 
-    const todayDate = getFormattedDate();
     const mailOptions = {
       from: 'facundogonzalez@tarjetadata.com.ar',
-      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com, luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar,',
-      subject: `Cantidad de Comercios Atendidos hoy: (${todayDate})`,
+      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com',
+      subject: `Informe Mensual de Comercios Atendidos`,
       html: emailContent,
     };
 
@@ -147,7 +124,7 @@ if (process.argv[2] === 'run') {
   sendEmail();
   console.log('Email enviado manualmente.');
 } else {
-  const job = schedule.scheduleJob(rule, () => {
+  schedule.scheduleJob(rule, () => {
     sendEmail();
     console.log('Correo enviado a las 23:59.');
   });

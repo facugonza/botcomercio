@@ -16,6 +16,14 @@ export default [
             format: 'cjs', // Formato CommonJS para dailyreport.cjs
         },
         plugins: [typescript()],
+    },
+    {
+        input: 'src/monthreport.ts',
+        output: {
+            file: 'dist/monthreport.cjs',
+            format: 'cjs', // Formato CommonJS para dailyreport.cjs
+        },
+        plugins: [typescript()],
     }
 ];
 

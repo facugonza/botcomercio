@@ -21,9 +21,8 @@
     }
   },
   "include": [
-    "**/*.js",
-    "**/*.ts"
-, "dist/dailyreport.cjs"  ],
+    "./src/**/*" // Incluye únicamente los archivos fuente
+],
   "exclude": [
     "node_modules",
     "dist",

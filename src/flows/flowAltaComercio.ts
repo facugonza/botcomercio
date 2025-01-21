@@ -81,37 +81,34 @@ function capturarRespuesta(ctx: any, fallBack: any, campo: keyof typeof comercio
 
 // Flujo de alta de comercio
 const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
-  .addAnswer(
-    "Para registrar tu comercio, necesito algunos datos. ¿Me podrías proporcionar el nombre de tu comercio, por favor?",
-    { capture: true },
-    (ctx, { fallBack }) => {
-      databaseLogger.addLog(
-        ctx.from,
-        acciones.ADHERIR
-      );
+.addAnswer(
+  "👋 *Para registrar tu comercio, necesito algunos datos.* ¿Me podrías proporcionar el nombre de tu comercio, por favor?",
+  { capture: true },
+  (ctx, { fallBack }) => {
+    databaseLogger.addLog(ctx.from, acciones.ADHERIR);
 
-      const nameRegex = /^[a-zA-Z\s]+$/;
-      if (nameRegex.test(ctx.body)) {
-        capturarRespuesta(ctx, fallBack, "nombre");
-      } else {
-        return fallBack("¿Puedes verificar el nombre ingresado? Gracias.");
-      }
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    if (nameRegex.test(ctx.body)) {
+      capturarRespuesta(ctx, fallBack, "nombre");
+    } else {
+      return fallBack("⚠️ *¿Puedes verificar el nombre ingresado?* Gracias.");
     }
-  )
+  }
+)
   .addAnswer(
-    "Gracias! Ahora necesito el número de CUIT de tu comercio (sin guiones ni espacios).",
+    "✨ Gracias! Ahora necesito el número de CUIT de tu comercio (sin guiones ni espacios).",
     { capture: true },
     (ctx, { fallBack }) => {
       const cuitRegex = /^\d{11}$/; // El CUIT debe tener 11 dígitos
       if (cuitRegex.test(ctx.body)) {
         capturarRespuesta(ctx, fallBack, "cuit");
       } else {
-        return fallBack("¿Puedes verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias.");
+        return fallBack("⚠️¿Puedes verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias.");
       }
     }
   )
   .addAnswer(
-    "¡Perfecto! Agendaré el siguiente número de teléfono como tu contacto.",
+    "📞 ¡Perfecto! Agendaré el siguiente número de teléfono como tu contacto.",
     null,
     async (ctx, { flowDynamic }) => {
       comercio.telefono = "+" + ctx.from;
@@ -123,19 +120,19 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
     }
   )
   .addAnswer(
-    "Por último, ¿podrías proporcionarme tu dirección de correo electrónico?",
+    "📧 Por último, ¿podrías proporcionarme tu dirección de correo electrónico?",
     { capture: true },
     (ctx, { fallBack }) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailRegex.test(ctx.body)) {
         capturarRespuesta(ctx, fallBack, "email");
       } else {
-        return fallBack("¿Puedes verificar el email ingresado? Gracias.");
+        return fallBack("⚠️ ¿Puedes verificar el email ingresado? Gracias.");
       }
     }
   )
   .addAnswer(
-    "*Por favor, envíame una copia de la constancia de inscripción en la AFIP.* (Esto es obligatorio)",
+    "📄 *Por favor, envíame una copia de la constancia de inscripción en la AFIP.* (Esto es obligatorio)",
     { capture: true },
     async (ctx, { fallBack, provider }) => {
       const merchantImagesDirectory = "./comercios/" + ctx.from; 
@@ -146,13 +143,13 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
         return;
       } catch (error) {
         emailLogger.error("CONSTANCIA DE INSCRIPCIÓN ERROR > " + error.stack);
-        return fallBack("Ocurrió un error, por favor reintenta!");
+        return fallBack("❌ Ocurrió un error, por favor reintenta!");
       }
     }
   )
   
   .addAnswer(
-    "Excelente! Ahora envíame una foto del DNI del titular del comercio. *Si no tienes una, envía una foto en blanco*.",
+    "🆔 Excelente! Ahora envíame una foto del DNI del titular del comercio. *Si no tienes una, envía una foto en blanco*.",
     { capture: true },
     async (ctx, { fallBack, provider }) => {
       const merchantImagesDirectory = "./comercios/" + ctx.from; 
@@ -163,12 +160,12 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
         return; 
       } catch (error) {
         emailLogger.error("Error capturando la foto DNI en alta de comercio:",error.stack);
-        return fallBack("Ocurrió un error, por favor reintenta!");
+        return fallBack("❌ Ocurrió un error, por favor reintenta!");
       }
     }
   )
   .addAnswer(
-    "¡Excelente! He derivado toda la documentación a un asesor, el cual te contactará. ¡Muchas gracias por completar el proceso por este medio!"
+    "🎉 ¡Excelente! He derivado toda la documentación a un asesor, el cual te contactará. ¡Muchas gracias por completar el proceso por este medio!"
   )
   .addAction(
     async (ctx) => {
@@ -187,7 +184,7 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
 
         await sendEmail(files);
       } catch (error) {
-        emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
+        emailLogger.error("❌ Ocurrió un error, por favor reintenta!", error.stack);
       }
     }
   );

@@ -38,14 +38,11 @@ async function generateAlphabeticCode(length: number): Promise<string> {
 // Flujo adaptado para comercio (Asesor)
 const flowAsesor = addKeyword("asesor", { sensitive: false })
   .addAnswer(
-    "Recuerda que solo podemos ayudarte si tienes agendado este número como contacto. Aguarda un instante..."
+    "📞 *Recuerda que solo podemos ayudarte si tienes agendado este número como contacto.* ⏳ *Aguarda un instante...*"
   )
   .addAction(async (ctx, { provider, flowDynamic }) => {
     // Log en la base de datos para la acción de asesor
-    databaseLogger.addLog(
-      ctx.from,
-      acciones.ASESOR // Cambiado de OPERADOR a ASESOR para diferenciar
-    );
+    databaseLogger.addLog(ctx.from, acciones.ASESOR);
 
     const refProvider = await provider.getInstance();
 
@@ -55,29 +52,33 @@ const flowAsesor = addKeyword("asesor", { sensitive: false })
         `${ctx.from}@c.us`,
         `5492644711445@c.us`, // SOPORTE DEPARTAMENTOS CÓDIGOS
       ]);
-      
-      const addedGroupMessage = "Te hemos agregado a un grupo de WhatsApp con nuestros asesores comerciales, ellos te ayudarán con tus consultas. ¡Muchas Gracias!";
+
+      const addedGroupMessage =
+        "👥 *Te hemos agregado a un grupo de WhatsApp con nuestros asesores comerciales.*\n🤝 *Ellos te ayudarán con tus consultas.* ¡Muchas Gracias!";
 
       try {
         const comercio = getComercioData(ctx);
-        
+
         const grouParams = {
           numeroTelefono: ctx.from,
           whatsappId: groupCreated.id,
           groupCode: ID_GROUP,
-          comercioCUIT: comercio.cuit
+          comercioCUIT: comercio.cuit,
         };
-        
-        const insertId = await createGroup(grouParams);          
-        logger.log('Grupo insertado con éxito, ID:', insertId);
+
+        const insertId = await createGroup(grouParams);
+        logger.log("Grupo insertado con éxito, ID:", insertId);
       } catch (error) {
-        logger.error('Error insertando Grupo Code:', ID_GROUP + "  > " + (error as Error).stack);
+        logger.error(
+          "Error insertando Grupo Code:",
+          ID_GROUP + "  > " + (error as Error).stack
+        );
       }
 
       return flowDynamic([{ body: addedGroupMessage }]);
-
     } else {
-      const outsideWorkingHoursMessage = 'Nuestros horarios de atención de los asesores comerciales es de 08:00 a 21:00 hs de Lunes a Viernes.';
+      const outsideWorkingHoursMessage =
+        "⏰ *Nuestros horarios de atención de los asesores comerciales es de 08:00 a 21:00 hs de Lunes a Viernes.*";
       return flowDynamic([{ body: outsideWorkingHoursMessage }]);
     }
 

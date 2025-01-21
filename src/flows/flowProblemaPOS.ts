@@ -70,13 +70,13 @@ async function createDirectoryIfNotExists(directory: string) {
 
 // Definimos un keyword para problemas con POS
 const flowProblemaPOS = addKeyword('POS', { sensitive: false })
-    .addAnswer('Por favor, describe el problema que estás teniendo con el POS.',
+    .addAnswer('🛠️ Por favor, describe el problema que estás teniendo con el POS.',
         { capture: true },
         async (ctx, { fallBack, state }) => {
             await state.update({ descripcion: ctx.body });
         }
     )
-    .addAnswer('*Ahora, por favor envíame una foto del error que aparece en el POS.*',
+    .addAnswer('📸 *Ahora, por favor envíame una foto del error que aparece en el POS.*',
         { capture: true },
         async (ctx, { fallBack, provider, state }) => {
             const merchantRootDirectory = `./comercios/${ctx.from}`;
@@ -89,11 +89,11 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
                 await state.update({ errorPhoto: localPath });
             } catch (error) {
                 emailLogger.error("Error al guardar la imagen > " + error.stack);
-                return fallBack("Ocurrió un error, por favor reintenta!");
+                return fallBack("❌ Ocurrió un error, por favor reintenta!");
             }
         }
     )
-    .addAnswer('¡Gracias por proporcionar la información! He enviado los detalles a nuestro equipo de soporte, y te contactarán pronto para ayudarte.')
+    .addAnswer('✅ *¡Gracias por proporcionar la información!*\n📨  He enviado los detalles a nuestro equipo de soporte, y te contactarán pronto para ayudarte.')
     .addAction(async (ctx, { state }) => {
         try {
             const imagesDirectory = `./comercios/${ctx.from}/pos`;
@@ -107,7 +107,7 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
 
             await sendEmail(state, files);
         } catch (error) {
-            emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
+            emailLogger.error("❌ Ocurrió un error, por favor reintenta!", error.stack);
         }
     });
 
