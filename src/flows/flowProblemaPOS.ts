@@ -69,44 +69,50 @@ async function createDirectoryIfNotExists(directory: string) {
 }
 
 // Definimos un keyword para problemas con POS
-const flowProblemaPOS = addKeyword('POS', { sensitive: false })
-    .addAnswer('Por favor, describe el problema que estás teniendo con el POS.',
-        { capture: true },
-        async (ctx, { fallBack, state }) => {
-            await state.update({ descripcion: ctx.body });
-        }
-    )
-    .addAnswer('*Ahora, por favor envíame una foto del error que aparece en el POS.*',
-        { capture: true },
-        async (ctx, { fallBack, provider, state }) => {
-            const merchantImagesDirectory = `./comercios/${ctx.from}/pos`;
-            await createDirectoryIfNotExists(merchantImagesDirectory);
-            try {
-                const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
-                await state.update({ errorPhoto: localPath });
-            } catch (error) {
-                emailLogger.error("Error al guardar la imagen > " + error.stack);
-                return fallBack("Ocurrió un error, por favor reintenta!");
-            }
-        }
-    )
-    .addAnswer('¡Gracias por proporcionar la información! He enviado los detalles a nuestro equipo de soporte, y te contactarán pronto para ayudarte.')
-    .addAction(async (ctx, { state }) => {
-        try {
-            const imagesDirectory = `./comercios/${ctx.from}/pos`;
+const flowProblemaPOS = addKeyword("POS", { sensitive: false })
+  .addAnswer(
+    "🛠️ *Por favor, describe el problema que estás teniendo con el POS.*",
+    { capture: true },
+    async (ctx, { fallBack, state }) => {
+      await state.update({ descripcion: ctx.body });
+    }
+  )
+  .addAnswer(
+    "📸 *Ahora, por favor envíame una foto del error que aparece en el POS.*",
+    { capture: true },
+    async (ctx, { fallBack, provider, state }) => {
+      const merchantRootDirectory = `./comercios/${ctx.from}`;
+      await createDirectoryIfNotExists(merchantRootDirectory);
 
-            const files = (await fs.readdir(imagesDirectory))
-                .filter(file => file.endsWith('.jpeg'))
-                .map(file => ({
-                    path: join(imagesDirectory, file),
-                    name: file
-                }));
+      const merchantPOSDirectory = `./comercios/${ctx.from}/POS`;
+      await createDirectoryIfNotExists(merchantPOSDirectory);
+      try {
+        const localPath = await provider.saveFile(ctx, { path: merchantPOSDirectory });
+        await state.update({ errorPhoto: localPath });
+      } catch (error) {
+        emailLogger.error("Error al guardar la imagen > " + error.stack);
+        return fallBack("❌ *Ocurrió un error, por favor reintenta!*");
+      }
+    }
+  )
+  .addAnswer(
+    "✅ *¡Gracias por proporcionar la información!*\n📨 *He enviado los detalles a nuestro equipo de soporte, y te contactarán pronto para ayudarte.*"
+  )
+  .addAction(async (ctx, { state }) => {
+    try {
+      const imagesDirectory = `./comercios/${ctx.from}/pos`;
 
-            await sendEmail(state, files);
-        } catch (error) {
-            emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
-        }
-    });
+      const files = (await fs.readdir(imagesDirectory))
+        .filter((file) => file.endsWith(".jpeg"))
+        .map((file) => ({
+          path: join(imagesDirectory, file),
+          name: file,
+        }));
 
+      await sendEmail(state, files);
+    } catch (error) {
+      emailLogger.error("❌ *Ocurrió un error, por favor reintenta!*", error.stack);
+    }
+  });
 
-export default flowProblemaPOS
+export default flowProblemaPOS;

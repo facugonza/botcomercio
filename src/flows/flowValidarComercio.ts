@@ -7,10 +7,6 @@ import acciones from '../models/actions';
 const asociarComercio = async (datosComercio: any) => {
   try {
     console.log("asociarComercio DATOS: " + JSON.stringify(datosComercio));
-    databaseLogger.addLog(
-      datosComercio.numeroComercio,
-      acciones.VINCULAR
-    );
 
     const config = {
       method: "POST",
@@ -32,7 +28,7 @@ const asociarComercio = async (datosComercio: any) => {
 // Flujo para validar comercio
 const flowValidarComercio = addKeyword("vincular", { sensitive: false })
   .addAnswer(
-    ["¡Claro! Antes de continuar, necesito validar el número de comercio. ¿Podrías proporcionármelo, por favor?"],
+    ["📋 *¡Claro! Antes de continuar, necesito validar el número de comercio.*\n🔢 ¿Podrías proporcionármelo, por favor?"],
     { capture: true },
     async (ctx, { fallBack, state }) => {
       state.clear();
@@ -43,13 +39,13 @@ const flowValidarComercio = addKeyword("vincular", { sensitive: false })
         await state.update({ numeroComercio: ctx.body });
       } else {
         return fallBack(
-          "¿Podrías verificar el número de comercio ingresado? Gracias."
+          "⚠️ *¿Podrías verificar el número de comercio ingresado?* Gracias."
         );
       }
     }
   )
   .addAnswer(
-    "¡Perfecto! Ahora necesito el CUIT del comercio. ¿Podrías proporcionármelo, por favor?",
+    "📄 *¡Perfecto! Ahora necesito el CUIT del comercio.*\n🔢 ¿Podrías proporcionármelo, por favor?",
     { capture: true },
     async (ctx, { fallBack, state }) => {
       console.log("flowValidarComercio > CUIT: " + ctx.body);
@@ -58,30 +54,13 @@ const flowValidarComercio = addKeyword("vincular", { sensitive: false })
         await state.update({ cuit: ctx.body });
       } else {
         return fallBack(
-          "¿Podrías verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias."
+          "⚠️ *¿Podrías verificar el CUIT ingresado?* Debe ser un número de 11 dígitos. Gracias."
         );
       }
     }
   )
-  /*
   .addAnswer(
-    "¡Perfecto! Ahora necesito el usuario registrado en Dpto Comercios. ¿Podrías proporcionármelo, por favor?",
-    { capture: true },
-    async (ctx, { fallBack, state }) => {
-      console.log("flowValidarComercio > CUIT: " + ctx.body);
-      const cuitRegex = /^\d{11}$/; // El CUIT debe tener 11 dígitos
-      if (cuitRegex.test(ctx.body)) {
-        await state.update({ cuit: ctx.body });
-      } else {
-        return fallBack(
-          "¿Podrías verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias."
-        );
-      }
-    }
-  )
-    */
-  .addAnswer(
-    "¡Gracias! Por último, necesito la contraseña del usuario del comercio. ¿Podrías proporcionármela, por favor?",
+    "🔐 *¡Gracias! Por último, necesito la contraseña del usuario del comercio.*\n🔑 ¿Podrías proporcionármela, por favor?",
     { capture: true },
     async (ctx, { fallBack, state }) => {
       console.log("flowValidarComercio > Contraseña: " + ctx.body);
@@ -89,21 +68,33 @@ const flowValidarComercio = addKeyword("vincular", { sensitive: false })
         await state.update({ password: ctx.body });
       } else {
         return fallBack(
-          "¿Podrías verificar la contraseña ingresada? Gracias."
+          "⚠️ *¿Podrías verificar la contraseña ingresada?* Gracias."
         );
       }
     }
   )
-  .addAnswer("¡Muchas gracias! Un momento por favor... Estoy validando tus datos.",
+  .addAnswer(
+    "⏳ *¡Muchas gracias! Un momento por favor... Estoy validando tus datos.*",
     { capture: false },
     async (ctx, { flowDynamic, endFlow, state }) => {
       const comercio = await asociarComercio(state.getMyState());
-      console.log("flowValidarComercio último addAnswer: " + comercio);        
+      console.log("flowValidarComercio último addAnswer: " + comercio);
       if (comercio != null && comercio.isLogin) {
-        await flowDynamic("¡Felicitaciones! Hemos asociado este número (*+" + ctx.from + "*) al comercio: " + comercio.descripcion + " (CUIT: " + comercio.cuit + "). ¡Gracias por registrarte!");
-        return endFlow("Por favor, envía un mensaje nuevamente para iniciar como comercio registrado.");
+        databaseLogger.addLog(
+          comercio.numeroComercio,
+          acciones.VINCULAR
+        );
+
+        await flowDynamic(
+          `🎉 *¡Felicitaciones!* Hemos asociado este número (*+${ctx.from}*) al comercio: *${comercio.descripcion}* (CUIT: ${comercio.cuit}). ¡Gracias por registrarte!`
+        );
+        return endFlow(
+          "✅ *Por favor, envía un mensaje nuevamente para iniciar como comercio registrado.*"
+        );
       } else {
-        return endFlow("La información proporcionada no coincide con nuestros registros. Por favor, verifica la información e inténtalo de nuevo.");
+        return endFlow(
+          "❌ *La información proporcionada no coincide con nuestros registros.*\nPor favor, verifica la información e inténtalo de nuevo."
+        );
       }
     }
   );

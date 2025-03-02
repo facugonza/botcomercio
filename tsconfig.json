@@ -23,7 +23,7 @@
   "include": [
     "**/*.js",
     "**/*.ts"
-  ],
+, "dist/dailyreport.cjs"  ],
   "exclude": [
     "node_modules",
     "dist",

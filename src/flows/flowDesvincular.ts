@@ -33,36 +33,38 @@ const desvincularComercio = async (datosCliente: DatosComercio): Promise<any> =>
 };
 
 const flowDesvincular = addKeyword("desvincular", { sensitive: false })
-    .addAnswer(
-        "¿Confirmas desvincular este número de teléfono ? Responde *SI o NO* para confirmar o cancelar.",
-        { capture: true },
-        async (ctx: any, { endFlow, flowDynamic }: any) => {
-            
-            databaseLogger.addLog(
-                ctx.from,
-                acciones.DESVINCULAR
+  .addAnswer(
+    "❓ *¿Confirmas desvincular este número de teléfono?*\n📱 Responde *SI o NO* para confirmar o cancelar.",
+    { capture: true },
+    async (ctx: any, { endFlow, flowDynamic }: any) => {
+      databaseLogger.addLog(ctx.from, acciones.DESVINCULAR);
+
+      const comercio = await findMerchant(ctx);
+      if (Object.keys(comercio).length > 0) {
+        if (ctx.body.toLowerCase() === "si") {
+          const datosComercio: DatosComercio = {
+            numeroTelefono: ctx.from,
+            cuit: comercio.cuit,
+          };
+          const desvincularCliente = await desvincularComercio(datosComercio);
+          setComercioData(ctx, {});
+          if (desvincularCliente != null && desvincularCliente.success) {
+            return endFlow(
+              `✅ *Desvinculamos este número (+${ctx.from}) de teléfono del comercio:* *${comercio.descripcion}.*`
             );
-                      
-            const comercio = await findMerchant(ctx);
-            if (Object.keys(comercio).length > 0) {
-                if (ctx.body.toLowerCase() === "si") {
-                    const datosComercio: DatosComercio = {
-                        numeroTelefono: ctx.from,
-                        cuit: comercio.cuit
-                    };
-                    const desvincularCliente = await desvincularComercio(datosComercio);
-                    setComercioData(ctx, {});
-                    if (desvincularCliente != null && desvincularCliente.success) {
-                        return endFlow(`Desvinculamos este número (*+${ctx.from}*) de Teléfono del comercio *:${comercio.descripcion}* !!`);
-                    } else {
-                        return flowDynamic("*No se pudo procesar la solicitud en este momento .... reintenta luego !!*");
-                    }
-                } else {
-                    setComercioData(ctx, {});
-                    return endFlow("*OPERACIÓN CANCELADA*. Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tienes suerte, tienes DATA!*");
-                }
-            }
+          } else {
+            return flowDynamic(
+              "❌ *No se pudo procesar la solicitud en este momento. Por favor, reintenta luego.*"
+            );
+          }
+        } else {
+          setComercioData(ctx, {});
+          return endFlow(
+            "🚫 *OPERACIÓN CANCELADA.*\n✅ *Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente.*\n🎉 *¡Tienes suerte, tienes DATA!*"
+          );
         }
-    );
+      }
+    }
+  );
 
 export default flowDesvincular;

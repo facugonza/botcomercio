@@ -15,47 +15,55 @@ interface Cliente {
 }
 
 const flowUltimaLiquidacion = addKeyword("CERTIFICADO", { sensitive: false })
-    .addAnswer(".",
-        { delay: 500 },
-        async (ctx: any, { endFlow, flowDynamic }: any) => {
-            
-            databaseLogger.addLog(
-                ctx.from,
-                acciones.DESCARGAR_LIQUIDACION
-            );
+  .addAnswer(
+    ".",
+    { delay: 500 },
+    async (ctx: any, { endFlow, flowDynamic }: any) => {
+      databaseLogger.addLog(ctx.from, acciones.DESCARGAR_RETENCION);
 
-            const comercio = await findMerchant(ctx);
+      const comercio = await findMerchant(ctx);
 
-            if (Object.keys(comercio).length > 0) {
-                try {
-                    if (comercio.lastcertificado){
-                        await flowDynamic([{
-                            body: `Obteniendo tu último Certificado de retencion ${comercio.lastcertificadofecha}. *Aguarda unos instantes...*`
-                        }]);
-                        
-                        const resumenURL = `https://chatbot.tarjetadata.com.ar/AppMovil/ComercioCertPDF?certificado=${comercio.lastcertificado}`;
-                        
-                        await flowDynamic([{
-                            body: `Certificado N° ${comercio.lastcertificado}`,
-                            media: resumenURL,
-                        }]);
-                    }else {
-                        await flowDynamic([{
-                            body: `No se encontraron certificados Generados a la fecha.`
-                        }]);
-                    }
+      if (Object.keys(comercio).length > 0) {
+        try {
+          if (comercio.lastcertificado) {
+            await flowDynamic([
+              {
+                body: `📄 *Obteniendo tu último Certificado de retención ${comercio.lastcertificadofecha}.* ⏳ *Aguarda unos instantes...*`,
+              },
+            ]);
 
-                } catch (error) {
-                    await flowDynamic([{ body: "En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
-                    emailLogger.error(error);
-                }
+            const resumenURL = `https://chatbot.tarjetadata.com.ar/AppMovil/ComercioCertPDF?certificado=${comercio.lastcertificado}`;
 
-                setComercioData(ctx, {});
-                return endFlow("Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tenes suerte, tenes DATA!*");
-            } else {
-                console.log(`Comercio no encontrado, length: ${Object.keys(comercio).length}`);
-            }
+            await flowDynamic([
+              {
+                body: `📑 *Certificado N° ${comercio.lastcertificado}*`,
+                media: resumenURL,
+              },
+            ]);
+          } else {
+            await flowDynamic([
+              {
+                body: `📭 *No se encontraron certificados generados a la fecha.*`,
+              },
+            ]);
+          }
+        } catch (error) {
+          await flowDynamic([
+            {
+              body: `❌ *En estos momentos no puedo procesar la opción solicitada.* Por favor, *reintenta más tarde.*`,
+            },
+          ]);
+          emailLogger.error(error);
         }
-    );
+
+        setComercioData(ctx, {});
+        return endFlow(
+          "✅ *Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente.*\n🎉 *¡Tenés suerte... tenés DATA!*"
+        );
+      } else {
+        console.log(`Comercio no encontrado, length: ${Object.keys(comercio).length}`);
+      }
+    }
+  );
 
 export default flowUltimaLiquidacion;
