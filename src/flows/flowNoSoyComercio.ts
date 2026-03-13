@@ -1,32 +1,40 @@
 import { addKeyword } from '@builderbot/bot';
-import flowRequisitosComercio from "./flowRequisitosComercio"; // Flujo para mostrar requisitos específicos de comercio
-import flowAltaComercio from "./flowAltaComercio"; // Flujo para alta de un nuevo comercio
+import flowRequisitosComercio from "./flowRequisitosComercio";
+import flowAltaComercio from "./flowAltaComercio";
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
+import { classifyIntent } from '../services/aiService';
 
-// Opciones permitidas adaptadas para el comercio
 const opcionesPermitidas = ["SOLICITAR", "REQUISITOS"];
 
-// Adaptar el flujo para usuarios que no son comercios
-const flowNoSoyComercio = addKeyword(["informacion", "información"], { sensitive: false })
-  .addAnswer(
-    [
-      "*-* Si deseas registrar tu comercio, responde *SOLICITAR*.", "",
-      "*-* Si quieres conocer los requisitos para registrar tu comercio, responde *REQUISITOS*.",
-    ],
-    { capture: true },
-    async (ctx, { fallBack }) => {
-      // Registrar la acción en el logger de base de datos
-      databaseLogger.addLog(
-        ctx.from,
-        acciones.MENU_NO_COMERCIO // Acción específica para comercio
-      );
+const descripciones = {
+    SOLICITAR:  "quiere registrar su comercio o iniciar el proceso de adhesión a Tarjeta DATA",
+    REQUISITOS: "quiere conocer los documentos y requisitos necesarios para afiliarse como comercio",
+};
 
-      if (!opcionesPermitidas.includes(ctx.body.toUpperCase())) {
-        return fallBack("Lo siento, *" + ctx.body + "* no es una opción válida. Por favor, intenta de nuevo. *(SOLICITAR, REQUISITOS)*");
-      }
+const routeIntent = async (intencion: string | null, gotoFlow: any) => {
+    if (intencion === 'SOLICITAR')  return gotoFlow(flowAltaComercio);
+    if (intencion === 'REQUISITOS') return gotoFlow(flowRequisitosComercio);
+    return null;
+};
+
+const flowNoSoyComercio = addKeyword(["informacion", "información"], { sensitive: false })
+  .addAction(async (ctx, { gotoFlow, state }) => {
+    databaseLogger.addLog(ctx.from, acciones.MENU_NO_COMERCIO);
+    const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
+    const routed = await routeIntent(intencion, gotoFlow);
+    if (routed) await state.update({ routed: true });
+  })
+  .addAnswer(
+    "¿Querés registrar tu comercio o conocer los requisitos para hacerlo?",
+    { capture: true },
+    async (ctx, { fallBack, gotoFlow, state }) => {
+      if (state.get('routed')) return;
+      const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
+      const routed = await routeIntent(intencion, gotoFlow);
+      if (!routed) return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
     },
-    [flowAltaComercio, flowRequisitosComercio] // Flujos adaptados para comercio
+    [flowAltaComercio, flowRequisitosComercio]
   );
 
 export default flowNoSoyComercio;

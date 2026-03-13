@@ -1,56 +1,51 @@
 import { addKeyword } from '@builderbot/bot';
 import flowLiquidacion from "./flowUltimaLiquidacion";
 import flowRetencion from "./flowCertifficadoRetencion";
-//import flowPlanes from "./flowPlanes";
 import flowAsesor from "./flowAsesor";
 import flowValidarCupon from "./flowValidarCupon";
 import flowProblemaPOS from "./flowProblemaPOS";
-//import flowAcelerarLiquidacion from "./flowAcelerarLiquidacion";
-//import flowReclamo from "./flowReclamo";
 import flowDesvincular from "./flowDesvincular";
+import { classifyIntent } from '../services/aiService';
 
+const opcionesPermitidas = ["LIQUIDACION", "CERTIFICADO", "ASESOR", "VALIDAR", "POS", "DESVINCULAR"];
 
-// Definimos las opciones permitidas para los comercios
-const opcionesPermitidas = ["LIQUIDACION", "CERTIFICADO", "PLANES", "ASESOR", "VALIDAR", "POS", "DESVINCULAR"];
+const descripciones = {
+    LIQUIDACION:  "quiere descargar o ver su última liquidación de pagos",
+    CERTIFICADO:  "quiere descargar su certificado o constancia de retención",
+    ASESOR:       "quiere hablar o comunicarse con un asesor o vendedor comercial",
+    VALIDAR:      "quiere validar o consultar un cupón de venta manual",
+    POS:          "tiene un problema con su terminal o equipo POS",
+    DESVINCULAR:  "quiere desvincular o quitar este número de teléfono del comercio",
+};
 
-// Adaptamos el flujo a SoyComercio con las nuevas opciones
+const routeIntent = async (intencion: string | null, gotoFlow: any) => {
+    if (intencion === 'LIQUIDACION') return gotoFlow(flowLiquidacion);
+    if (intencion === 'CERTIFICADO') return gotoFlow(flowRetencion);
+    if (intencion === 'ASESOR')      return gotoFlow(flowAsesor);
+    if (intencion === 'VALIDAR')     return gotoFlow(flowValidarCupon);
+    if (intencion === 'POS')         return gotoFlow(flowProblemaPOS);
+    if (intencion === 'DESVINCULAR') return gotoFlow(flowDesvincular);
+    return null;
+};
+
 const flowSoyComercio = addKeyword("SoyComercioDeTarjetaDATA", { sensitive: false })
+  // Intenta clasificar el primer mensaje del usuario directamente
+  .addAction(async (ctx, { gotoFlow, state }) => {
+    const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
+    const routed = await routeIntent(intencion, gotoFlow);
+    if (routed) await state.update({ routed: true });
+  })
+  // Si la IA no pudo con el primer mensaje, pregunta naturalmente y espera respuesta
   .addAnswer(
-    [
-      "*-* Descargar la última liquidación. Responde *LIQUIDACION*",
-      "*-* Descargar la última retención. Responde *CERTIFICADO*",
-      //"*-* Consultar planes vigentes. Responde *PLANES*",
-      "*-* Solicitar asesor comercial. Responde *ASESOR*",
-      "*-* Validar un cupón manualmente. Responde *VALIDAR*",
-      "*-* Tengo problemas con mi equipo de POS. Responde *POS*",
-      //"*-* Acelerar mi liquidación. Responde *ACELERAR*",      
-      //"*-* Reclamo de liquidación o cupón no liquidado. Responde *RECLAMO*",
-      "*-* Desvincular este número de teléfono del comercio. Responde *DESVINCULAR*",
-      " ",
-      "*Por incovenientes en Ventas, comunícate al 4292002 o 4292003 en horarios de 09:00hs a 13:00hs y 16:30hs a 20:30hs.*"
-    ],
+    "¿En qué te puedo ayudar hoy?",
     { capture: true },
-    async (ctx, { endFlow, fallBack }) => {
-      // Validamos si la opción ingresada es válida
-      if (!opcionesPermitidas.includes(ctx.body.toUpperCase())) {
-        return fallBack(`Lo siento, *${ctx.body}* no es una opción válida. Por favor, intenta de nuevo. *(LIQUIDACION, CERTIFICADO, ASESOR, VALIDAR, POS, DESVINCULAR)*`);
-      }
-
-      // Aquí podrías agregar lógica adicional basada en la opción seleccionada, si fuera necesario
+    async (ctx, { fallBack, gotoFlow, state }) => {
+      if (state.get('routed')) return;
+      const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
+      const routed = await routeIntent(intencion, gotoFlow);
+      if (!routed) return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
     },
-    [
-      flowLiquidacion, 
-      flowRetencion,   
-      // flowPlanes, 
-      flowAsesor,
-      flowValidarCupon,
-      flowProblemaPOS, 
-      //flowAcelerarLiquidacion,
-      //flowReclamo, 
-      flowDesvincular
-    ]
+    [flowLiquidacion, flowRetencion, flowAsesor, flowValidarCupon, flowProblemaPOS, flowDesvincular]
   );
-  
-
 
 export default flowSoyComercio;

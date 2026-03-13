@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -f C:/angela/data/comerbot/botcomercio/tsconfig.tsbuildinfo && cd C:/angela/data/comerbot/botcomercio && npm run build 2>&1)",
+      "Bash(ls C:/angela/data/comerbot/botcomercio/node_modules/@google/generative-ai/dist/*.d.ts 2>/dev/null | head -5)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && sed -i 's/\"moduleResolution\": \"node\"/\"moduleResolution\": \"bundler\"/' tsconfig.json && npm run build 2>&1)"
+    ]
+  }
+}
