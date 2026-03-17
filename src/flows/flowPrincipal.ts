@@ -12,29 +12,23 @@ const descripciones = {
     FAQ:         "quiere ver preguntas frecuentes sobre planes, cupones, liquidaciones o requisitos",
 };
 
-const routeIntent = async (intencion: string | null, gotoFlow: any) => {
-    if (intencion === 'VINCULAR')    return gotoFlow(flowValidarComercio);
-    if (intencion === 'INFORMACION') return gotoFlow(flowNoSoyComercio);
-    if (intencion === 'FAQ')         return gotoFlow(flowFAQ);
-    return null;
+const routeIntent = async (intencion: string | null, gotoFlow: any): Promise<boolean> => {
+    if (intencion === 'VINCULAR')    { gotoFlow(flowValidarComercio); return true; }
+    if (intencion === 'INFORMACION') { gotoFlow(flowNoSoyComercio);   return true; }
+    if (intencion === 'FAQ')         { gotoFlow(flowFAQ);             return true; }
+    return false;
 };
 
 const flowPrincipalComercio = addKeyword("flowPrincipalTelefonoNoAsociadoComercio", { sensitive: false })
-  // Intenta clasificar el primer mensaje del usuario directamente
-  .addAction(async (ctx, { gotoFlow, state }) => {
-    const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
-    const routed = await routeIntent(intencion, gotoFlow);
-    if (routed) await state.update({ routed: true });
-  })
-  // Si la IA no pudo con el primer mensaje, pregunta naturalmente y espera respuesta
   .addAnswer(
     "¿En qué te puedo ayudar?",
     { capture: true },
-    async (ctx, { fallBack, gotoFlow, state }) => {
-      if (state.get('routed')) return;
+    async (ctx, { fallBack, gotoFlow }) => {
       const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
-      const routed = await routeIntent(intencion, gotoFlow);
-      if (!routed) return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
+      if (intencion === 'VINCULAR')    return gotoFlow(flowValidarComercio);
+      if (intencion === 'INFORMACION') return gotoFlow(flowNoSoyComercio);
+      if (intencion === 'FAQ')         return gotoFlow(flowFAQ);
+      return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
     },
     [flowValidarComercio, flowNoSoyComercio, flowFAQ]
   );

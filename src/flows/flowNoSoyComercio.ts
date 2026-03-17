@@ -12,27 +12,24 @@ const descripciones = {
     REQUISITOS: "quiere conocer los documentos y requisitos necesarios para afiliarse como comercio",
 };
 
-const routeIntent = async (intencion: string | null, gotoFlow: any) => {
-    if (intencion === 'SOLICITAR')  return gotoFlow(flowAltaComercio);
-    if (intencion === 'REQUISITOS') return gotoFlow(flowRequisitosComercio);
-    return null;
+const routeIntent = async (intencion: string | null, gotoFlow: any): Promise<boolean> => {
+    if (intencion === 'SOLICITAR')  { gotoFlow(flowAltaComercio);       return true; }
+    if (intencion === 'REQUISITOS') { gotoFlow(flowRequisitosComercio); return true; }
+    return false;
 };
 
 const flowNoSoyComercio = addKeyword(["informacion", "información"], { sensitive: false })
-  .addAction(async (ctx, { gotoFlow, state }) => {
+  .addAction(async (ctx) => {
     databaseLogger.addLog(ctx.from, acciones.MENU_NO_COMERCIO);
-    const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
-    const routed = await routeIntent(intencion, gotoFlow);
-    if (routed) await state.update({ routed: true });
   })
   .addAnswer(
     "¿Querés registrar tu comercio o conocer los requisitos para hacerlo?",
     { capture: true },
-    async (ctx, { fallBack, gotoFlow, state }) => {
-      if (state.get('routed')) return;
+    async (ctx, { fallBack, gotoFlow }) => {
       const intencion = await classifyIntent(ctx.body.trim(), opcionesPermitidas, descripciones);
-      const routed = await routeIntent(intencion, gotoFlow);
-      if (!routed) return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
+      if (intencion === 'SOLICITAR')  return gotoFlow(flowAltaComercio);
+      if (intencion === 'REQUISITOS') return gotoFlow(flowRequisitosComercio);
+      return fallBack("No pude entender tu consulta. ¿Podés contarme un poco más sobre lo que necesitás?");
     },
     [flowAltaComercio, flowRequisitosComercio]
   );

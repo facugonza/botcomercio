@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logger, emailLogger } from '../logger/logger';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 /**
  * Clasifica la intención del usuario en base a las opciones disponibles.
@@ -25,19 +25,34 @@ const classifyIntent = async (
         ).join('\n');
 
         const prompt = `
-Eres un asistente virtual de Tarjeta DATA Argentina que ayuda a comercios afiliados.
-Un comercio te escribió el siguiente mensaje: "${mensaje}"
+Eres ComerBot, un clasificador de intenciones para el asistente virtual de WhatsApp de Tarjeta DATA, una tarjeta de crédito utilizada en San Juan, Argentina.
 
-Tu tarea es clasificar su intención en UNA de estas opciones:
+=== CONTEXTO DEL NEGOCIO ===
+- Comercio: negocio adherido a Tarjeta DATA que acepta pagos con esta tarjeta.
+- Liquidación: proceso mediante el cual Tarjeta DATA paga al comercio las ventas realizadas, incluyendo montos, comisiones y fechas de acreditación.
+- Cupón: comprobante de una venta realizada con Tarjeta DATA que contiene los datos de la transacción.
+- POS: dispositivo que usa el comercio para cobrar con tarjeta. Problemas comunes: no conecta, no imprime, error de comunicación.
+- Acreditación: momento en que el dinero de las ventas se deposita en la cuenta del comercio.
+- Certificado de retención: documento fiscal que detalla las retenciones impositivas aplicadas a las liquidaciones.
+- Asesor: persona humana de Tarjeta DATA que puede ayudar con ventas, planes y consultas complejas.
+- Desvincular: dar de baja un número de teléfono asociado a un comercio.
+- Alta de comercio: proceso de registro de un nuevo comercio en Tarjeta DATA.
+
+=== TAREA ===
+El usuario escribió: "${mensaje}"
+
+Clasificá su intención en UNA de estas opciones:
 ${opcionesTexto}
-- OTRO: si el mensaje no se relaciona claramente con ninguna opción
+- OTRO: si el mensaje es un saludo, pregunta genérica o no encaja claramente con ninguna opción
 
-Reglas:
-- Considerá el español rioplatense, errores de tipeo y abreviaciones
-- Si hay dudas entre dos opciones, elegí la más probable
-- Respondé ÚNICAMENTE con un JSON válido, sin texto adicional
+=== REGLAS ESTRICTAS ===
+- Usá OTRO para saludos ("hola", "buenas", "buen día") o mensajes sin intención clara
+- Considerá español rioplatense, abreviaciones y errores de tipeo (ej: "liqui", "liq", "retencion", "pos", "maquinita")
+- Si hay dudas entre dos opciones, elegí la más probable según el contexto del negocio
+- Si el mensaje es ambiguo, preferí OTRO antes que forzar una opción incorrecta
+- Respondé SOLO con JSON válido, sin texto antes ni después, sin markdown
 
-Formato de respuesta: {"intencion": "OPCION", "confianza": 0.0}
+Formato: {"intencion": "OPCION", "confianza": 0.0}
 `.trim();
 
         const timeoutPromise = new Promise((_, reject) =>
@@ -60,7 +75,7 @@ Formato de respuesta: {"intencion": "OPCION", "confianza": 0.0}
 
         logger.info(`[aiService] mensaje: "${mensaje}" → intención: ${intencion} (confianza: ${confianza})`);
 
-        if (!intencion || intencion === 'OTRO' || confianza < 0.6) {
+        if (!intencion || intencion === 'OTRO' || confianza < 0.7) {
             return null;
         }
 

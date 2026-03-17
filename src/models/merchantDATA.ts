@@ -54,7 +54,7 @@ export interface Certificado {
   
   const getComercioData = (ctx) => {
     const from = ctx.from;
-    return comercioDATA[from] || {};
+    return comerciosData[from] || {};
   };
 
   export  {  setComercioData,  getComercioData };

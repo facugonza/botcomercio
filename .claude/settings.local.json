@@ -3,7 +3,18 @@
     "allow": [
       "Bash(rm -f C:/angela/data/comerbot/botcomercio/tsconfig.tsbuildinfo && cd C:/angela/data/comerbot/botcomercio && npm run build 2>&1)",
       "Bash(ls C:/angela/data/comerbot/botcomercio/node_modules/@google/generative-ai/dist/*.d.ts 2>/dev/null | head -5)",
-      "Bash(cd C:/angela/data/comerbot/botcomercio && sed -i 's/\"moduleResolution\": \"node\"/\"moduleResolution\": \"bundler\"/' tsconfig.json && npm run build 2>&1)"
+      "Bash(cd C:/angela/data/comerbot/botcomercio && sed -i 's/\"moduleResolution\": \"node\"/\"moduleResolution\": \"bundler\"/' tsconfig.json && npm run build 2>&1)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && npm install 2>&1 | tail -8)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && npm install @builderbot/provider-meta 2>&1 | tail -5)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && npm run build 2>&1)",
+      "Bash(ls C:/angela/data/comerbot/botcomercio/node_modules/@builderbot/provider-meta/dist/*.d.ts 2>/dev/null)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && sed -i 's/\"moduleResolution\": \"bundler\"/\"moduleResolution\": \"node\"/' tsconfig.json && npm run build 2>&1)",
+      "Bash(netstat -ano | grep :3099)",
+      "Bash(cd C:/angela/data/comerbot/botcomercio && npm start 2>&1)",
+      "Bash(curl -s http://localhost:4040/api/tunnels | python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(t['public_url']\\) for t in d['tunnels']]\" 2>/dev/null)",
+      "Bash(npm start:*)",
+      "Bash(curl -s \"https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyBQPeOsHx79pI04C0BGBHEWCgC3m8ydqQM\" | python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(m['name'], '-', m.get\\('supportedGenerationMethods',''\\)\\) for m in d.get\\('models',[]\\)]\" 2>/dev/null)",
+      "Bash(cd \"C:\\\\angela\\\\data\\\\comerbot\\\\botcomercio\" && node -e \"\nconst { GoogleGenerativeAI } = require\\('@google/generative-ai'\\);\nconst genAI = new GoogleGenerativeAI\\('AIzaSyBQPeOsHx79pI04C0BGBHEWCgC3m8ydqQM'\\);\nconst model = genAI.getGenerativeModel\\({ model: 'gemini-2.0-flash-lite' }\\);\nmodel.generateContent\\('Di solo: OK'\\).then\\(r => console.log\\('OK:', r.response.text\\(\\)\\)\\).catch\\(e => console.error\\('ERROR:', e.message\\)\\);\n\" 2>&1)"
     ]
   }
 }

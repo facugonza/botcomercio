@@ -30,7 +30,7 @@ const flowMain = addKeyword(EVENTS.WELCOME)
 
         if (comercio && comercio.isLogin) {
           // Si se encuentra un comercio asociado, se personaliza la respuesta
-          await flowDynamic(`Bienvenido, ${comercio.descripcion}! ¿En qué puedo ayudarte hoy?`);
+          await flowDynamic(`Bienvenido, ${comercio.descripcion}!`);
           
           return gotoFlow(flowSoyComercio); // Flujo específico para comercios
         } else {

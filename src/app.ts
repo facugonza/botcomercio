@@ -3,7 +3,7 @@ dotenv.config();
 
 import { createBot, createProvider, createFlow, addKeyword, utils } from '@builderbot/bot';
 import { MemoryDB as Database } from '@builderbot/bot';
-import { BaileysProvider as Provider } from '@builderbot/provider-baileys';
+import { MetaProvider as Provider } from '@builderbot/provider-meta';
 
 import https from 'https';
 
@@ -54,7 +54,12 @@ const main = async () => {
         //flowDesvincular
     ]);
 
-    const adapterProvider = createProvider(Provider);
+    const adapterProvider = createProvider(Provider, {
+        jwtToken: process.env.ACCESS_TOKEN,
+        numberId: process.env.PHONE_NUMBER_ID,
+        verifyToken: process.env.VERIFY_TOKEN,
+        version: 'v20.0'
+    });
     const adapterDB = new Database();
 
     // Configuración del bot
