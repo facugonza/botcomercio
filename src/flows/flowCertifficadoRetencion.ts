@@ -14,7 +14,7 @@ interface Cliente {
     hasVisaSummary?: boolean;
 }
 
-const flowUltimaLiquidacion = addKeyword("CERTIFICADO", { sensitive: false })
+const flowUltimaLiquidacion = addKeyword("__flow_retencion__", { sensitive: false })
     .addAnswer(".",
         { delay: 500 },
         async (ctx: any, { endFlow, flowDynamic }: any) => {
@@ -33,7 +33,7 @@ const flowUltimaLiquidacion = addKeyword("CERTIFICADO", { sensitive: false })
                             body: `Obteniendo tu último Certificado de retencion ${comercio.lastcertificadofecha}. *Aguarda unos instantes...*`
                         }]);
                         
-                        const resumenURL = `https://chatbot.tarjetadata.com.ar/AppMovil/ComercioCertPDF?certificado=${comercio.lastcertificado}`;
+                        const resumenURL = `${process.env.API_PUBLIC_URL}/AppMovil/ComercioCertPDF?certificado=${comercio.lastcertificado}`;
                         
                         await flowDynamic([{
                             body: `Certificado N° ${comercio.lastcertificado}`,

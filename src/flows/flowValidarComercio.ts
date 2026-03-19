@@ -2,6 +2,7 @@ import { addKeyword, EVENTS } from '@builderbot/bot';
 import axios from "axios";
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
+import { checkEscape } from '../utils/flowGuard';
 
 // Función para asociar el comercio usando los datos proporcionados
 const asociarComercio = async (datosComercio: any) => {
@@ -14,7 +15,7 @@ const asociarComercio = async (datosComercio: any) => {
 
     const config = {
       method: "POST",
-      url: "http://200.70.56.203:8021/AppMovil/ValidarComercio", // Cambiado a la URL correcta para validar comercio
+      url: `${process.env.API_BASE_URL}/AppMovil/ValidarComercio`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -32,34 +33,30 @@ const asociarComercio = async (datosComercio: any) => {
 // Flujo para validar comercio
 const flowValidarComercio = addKeyword("vincular", { sensitive: false })
   .addAnswer(
-    ["¡Claro! Antes de continuar, necesito validar el número de comercio. ¿Podrías proporcionármelo, por favor?"],
+    ["¡Claro! Vamos a vincular tu comercio. En cualquier momento podés escribir *cancelar* para salir.\n\nNecesito el número de comercio:"],
     { capture: true },
-    async (ctx, { fallBack, state }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
       state.clear();
       await state.update({ telefono: ctx.from });
-      console.log("flowValidarComercio > Número de Comercio: " + ctx.body);
+      if (await checkEscape(ctx, state, endFlow, 'intentos_nro')) return;
       const comercioRegex = /^\d+$/;
       if (comercioRegex.test(ctx.body)) {
         await state.update({ numeroComercio: ctx.body });
       } else {
-        return fallBack(
-          "¿Podrías verificar el número de comercio ingresado? Gracias."
-        );
+        return fallBack("¿Podrías verificar el número de comercio? Debe ser solo números. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "¡Perfecto! Ahora necesito el CUIT del comercio. ¿Podrías proporcionármelo, por favor?",
+    "Ahora necesito el CUIT del comercio (11 dígitos sin guiones):",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
-      console.log("flowValidarComercio > CUIT: " + ctx.body);
-      const cuitRegex = /^\d{11}$/; // El CUIT debe tener 11 dígitos
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_cuit')) return;
+      const cuitRegex = /^\d{11}$/;
       if (cuitRegex.test(ctx.body)) {
         await state.update({ cuit: ctx.body });
       } else {
-        return fallBack(
-          "¿Podrías verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias."
-        );
+        return fallBack("¿Podrías verificar el CUIT? Debe tener 11 dígitos. Escribí *cancelar* para salir.");
       }
     }
   )
@@ -81,16 +78,14 @@ const flowValidarComercio = addKeyword("vincular", { sensitive: false })
   )
     */
   .addAnswer(
-    "¡Gracias! Por último, necesito la contraseña del usuario del comercio. ¿Podrías proporcionármela, por favor?",
+    "Por último, la contraseña del usuario del comercio:",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
-      console.log("flowValidarComercio > Contraseña: " + ctx.body);
-      if (ctx.body && ctx.body.length > 0) { // Verifica que la contraseña no esté vacía
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_pass')) return;
+      if (ctx.body && ctx.body.length > 0) {
         await state.update({ password: ctx.body });
       } else {
-        return fallBack(
-          "¿Podrías verificar la contraseña ingresada? Gracias."
-        );
+        return fallBack("¿Podrías ingresar la contraseña? No puede estar vacía. Escribí *cancelar* para salir.");
       }
     }
   )

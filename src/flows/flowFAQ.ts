@@ -1,6 +1,6 @@
 import { addKeyword } from '@builderbot/bot';
 
-const flowFaq = addKeyword("FAQ", { sensitive: false })
+const flowFaq = addKeyword("__flow_faq__", { sensitive: false })
   .addAnswer(
     "*REQUISITOS PARA TU ADHESIÓN DE COMERCIO*\n" +
     "Empresas Unipersonales:\n" +

@@ -9,20 +9,17 @@ import https from 'https';
 
 // Importaciones adaptadas para Comercio
 import flowMain from "./flows/flowMain";
-//import flowAltaComercio from "./flows/flowAltaComercio";
+import flowAltaComercio from "./flows/flowAltaComercio";
 import flowValidarComercio from "./flows/flowValidarComercio";
 import flowNoSoyComercio from './flows/flowNoSoyComercio';
 import flowSoyComercio from './flows/flowSoyComercio';
 import flowLiquidacion from './flows/flowUltimaLiquidacion';
 import flowPrincipal from './flows/flowPrincipal';
 import flowRetencion from './flows/flowCertifficadoRetencion';
-//import flowPlanes from "./flows/flowPlanes";
-//import flowAcelerarLiquidacion from "./flows/flowAcelerarLiquidacion";
-//import flowProblemaPOS from "./flows/flowProblemaPOS";
-//import flowValidarCupon from "./flows/flowValidarCupon";
-//import flowFAQ from "./flows/flowFAQ";
-//import flowReclamo from "./flows/flowReclamo";
-//import flowDesvincular from "./flows/flowDesvincular";
+import flowProblemaPOS from "./flows/flowProblemaPOS";
+import flowValidarCupon from "./flows/flowValidarCupon";
+import flowFAQ from "./flows/flowFAQ";
+import flowDesvincular from "./flows/flowDesvincular";
 
 const PORT: number = +(process.env.PORT ?? 3099);
 
@@ -41,17 +38,14 @@ const main = async () => {
         flowSoyComercio,
         flowLiquidacion,
         flowNoSoyComercio,
-        //flowAltaComercio,
+        flowAltaComercio,
         flowValidarComercio,
         flowPrincipal,
         flowRetencion,
-        //flowAcelerarLiquidacion,
-        //flowPlanes,
-        //flowProblemaPOS,
-        //flowValidarCupon,
-        //flowFAQ,
-        //flowReclamo,
-        //flowDesvincular
+        flowProblemaPOS,
+        flowValidarCupon,
+        flowFAQ,
+        flowDesvincular
     ]);
 
     const adapterProvider = createProvider(Provider, {

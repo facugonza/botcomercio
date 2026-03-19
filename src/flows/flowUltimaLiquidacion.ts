@@ -6,7 +6,7 @@ import acciones from '../models/actions';
 import { emailLogger, logger } from '~/logger/logger';
 
 
-const flowUltimaLiquidacion = addKeyword("liquidacion", { sensitive: false })
+const flowUltimaLiquidacion = addKeyword("__flow_liquidacion__", { sensitive: false })
     .addAnswer(".",
         { delay: 500 },
         async (ctx: any, { endFlow, flowDynamic }: any) => {
@@ -25,7 +25,7 @@ const flowUltimaLiquidacion = addKeyword("liquidacion", { sensitive: false })
                             body: `Obteniendo tu última Liquidacion DATA generado con fecha ${comercio.lastordenfecha}. *Aguarda unos instantes...*`
                         }]);
                         
-                        const resumenURL = `https://chatbot.tarjetadata.com.ar/AppMovil/ComercioOrdenPDF?nroorden=${comercio.lastorden}`;
+                        const resumenURL = `${process.env.API_PUBLIC_URL}/AppMovil/ComercioOrdenPDF?nroorden=${comercio.lastorden}`;
                         
                         await flowDynamic([{
                             body: `Liquidacion N° ${comercio.lastorden}`,

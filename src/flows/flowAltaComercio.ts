@@ -1,32 +1,24 @@
 import { addKeyword } from '@builderbot/bot';
+import { checkEscape } from '../utils/flowGuard';
 import nodemailer from "nodemailer";
-import { readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import fs from 'fs-extra';
 import { join } from 'path';
 
-import { logger, emailLogger } from '../logger/logger';
+import { emailLogger } from '../logger/logger';
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
 
-// Objeto para almacenar los datos del comercio durante el flujo
-let comercio = {
-  nombre: "",
-  cuit: "",
-  telefono: "",
-  email: "",
-  direccion: "",
-};
-
 // Función para enviar un correo electrónico con los documentos adjuntos
-async function sendEmail(files: { path: string; name: string; }[]) {
+async function sendEmail(comercio: any, files: { path: string; name: string; }[]) {
   try {
     const transporter = nodemailer.createTransport({
-      host: "sd-1973625-l.dattaweb.com",
-      port: 587,
+      host: process.env.EMAIL_HOST,
+      port: +(process.env.EMAIL_PORT ?? 587),
       secure: false,
       auth: {
-        user: "facundogonzalez@tarjetadata.com.ar",
-        pass: "Facundo2000@*",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -45,8 +37,8 @@ async function sendEmail(files: { path: string; name: string; }[]) {
     Se adjunta la documentación del comercio.`;
 
     const mailOptions = {
-      from: "facundogonzalez@tarjetadata.com.ar",
-      to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacon@gmail.com",
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_TO,
       subject: "Solicitud de Registro de Comercio - CUIT: " + comercio.cuit,
       html: bodyHtml,
       attachments: attachments,
@@ -63,7 +55,7 @@ async function sendEmail(files: { path: string; name: string; }[]) {
 async function createDirectoryIfNotExists(directory: string) {
   try {
     if (!existsSync(directory)) {
-      mkdirSync(directory);
+      mkdirSync(directory, { recursive: true });
     }
   } catch (error) {
     console.log(error);
@@ -71,99 +63,97 @@ async function createDirectoryIfNotExists(directory: string) {
   }
 }
 
-// Función para capturar respuestas y actualizar el objeto comercio
-function capturarRespuesta(ctx: any, fallBack: any, campo: keyof typeof comercio) {
-  if (!ctx.body) {
-    return fallBack();
-  }
-  comercio[campo] = ctx.body;
-}
-
 // Flujo de alta de comercio
-const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
+const flowAltaComercio = addKeyword("__flow_alta__", { sensitive: false })
   .addAnswer(
-    "Para registrar tu comercio, necesito algunos datos. ¿Me podrías proporcionar el nombre de tu comercio, por favor?",
+    "Para registrar tu comercio necesito algunos datos. En cualquier momento podés escribir *cancelar* para salir.\n\n¿Cuál es el nombre de tu comercio?",
     { capture: true },
-    (ctx, { fallBack }) => {
-      databaseLogger.addLog(
-        ctx.from,
-        acciones.ADHERIR
-      );
-
-      const nameRegex = /^[a-zA-Z\s]+$/;
+    async (ctx, { fallBack, endFlow, state }) => {
+      databaseLogger.addLog(ctx.from, acciones.ADHERIR);
+      if (await checkEscape(ctx, state, endFlow, 'intentos_nombre')) return;
+      const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
       if (nameRegex.test(ctx.body)) {
-        capturarRespuesta(ctx, fallBack, "nombre");
+        await state.update({ nombre: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar el nombre ingresado? Gracias.");
+        return fallBack("¿Podés verificar el nombre? Solo letras por favor. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "Gracias! Ahora necesito el número de CUIT de tu comercio (sin guiones ni espacios).",
+    "El CUIT del comercio (11 dígitos, sin guiones ni espacios):",
     { capture: true },
-    (ctx, { fallBack }) => {
-      const cuitRegex = /^\d{11}$/; // El CUIT debe tener 11 dígitos
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_cuit')) return;
+      const cuitRegex = /^\d{11}$/;
       if (cuitRegex.test(ctx.body)) {
-        capturarRespuesta(ctx, fallBack, "cuit");
+        await state.update({ cuit: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar el CUIT ingresado? Debe ser un número de 11 dígitos. Gracias.");
+        return fallBack("¿Podés verificar el CUIT? Debe tener 11 dígitos. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "¡Perfecto! Agendaré el siguiente número de teléfono como tu contacto.",
+    "¡Perfecto! Agendaré el siguiente número de teléfono como contacto:",
     null,
-    async (ctx, { flowDynamic }) => {
-      comercio.telefono = "+" + ctx.from;
-      return flowDynamic([
-        {
-          body: "+" + ctx.from,
-        },
-      ]);
+    async (ctx, { flowDynamic, state }) => {
+      await state.update({ telefono: "+" + ctx.from });
+      return flowDynamic([{ body: "+" + ctx.from }]);
     }
   )
   .addAnswer(
-    "Por último, ¿podrías proporcionarme tu dirección de correo electrónico?",
+    "Tu dirección de correo electrónico:",
     { capture: true },
-    (ctx, { fallBack }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_email')) return;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (emailRegex.test(ctx.body)) {
-        capturarRespuesta(ctx, fallBack, "email");
+        await state.update({ email: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar el email ingresado? Gracias.");
+        return fallBack("¿Podés verificar el email? Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "*Por favor, envíame una copia de la constancia de inscripción en la AFIP.* (Esto es obligatorio)",
+    "Tu dirección física del comercio:",
     { capture: true },
-    async (ctx, { fallBack, provider }) => {
-      const merchantImagesDirectory = "./comercios/" + ctx.from; 
-      await createDirectoryIfNotExists(merchantImagesDirectory);        
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_direccion')) return;
+      if (ctx.body && ctx.body.trim().length > 0) {
+        await state.update({ direccion: ctx.body });
+      } else {
+        return fallBack("¿Podés ingresar la dirección? No puede estar vacía. Escribí *cancelar* para salir.");
+      }
+    }
+  )
+  .addAnswer(
+    "*Enviame una foto de la constancia de inscripción en AFIP:*",
+    { capture: true },
+    async (ctx, { fallBack, endFlow, provider, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_afip')) return;
+      const merchantImagesDirectory = "./comercios/" + ctx.from;
+      await createDirectoryIfNotExists(merchantImagesDirectory);
       try {
         const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
-        console.log("CONSTANCIA DE INSCRIPCIÓN > " + localPath);
-        return;
+        console.log("CONSTANCIA AFIP > " + localPath);
       } catch (error) {
-        emailLogger.error("CONSTANCIA DE INSCRIPCIÓN ERROR > " + error.stack);
-        return fallBack("Ocurrió un error, por favor reintenta!");
+        emailLogger.error("CONSTANCIA AFIP ERROR > " + error.stack);
+        return fallBack("Ocurrió un error al recibir la imagen. Intentá de nuevo o escribí *cancelar*.");
       }
     }
   )
-  
   .addAnswer(
-    "Excelente! Ahora envíame una foto del DNI del titular del comercio. *Si no tienes una, envía una foto en blanco*.",
+    "Ahora enviame una foto del DNI del titular del comercio:",
     { capture: true },
-    async (ctx, { fallBack, provider }) => {
-      const merchantImagesDirectory = "./comercios/" + ctx.from; 
-      await createDirectoryIfNotExists(merchantImagesDirectory);        
+    async (ctx, { fallBack, endFlow, provider, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_dni')) return;
+      const merchantImagesDirectory = "./comercios/" + ctx.from;
+      await createDirectoryIfNotExists(merchantImagesDirectory);
       try {
         const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
         console.log("DNI TITULAR > " + localPath);
-        return; 
       } catch (error) {
-        emailLogger.error("Error capturando la foto DNI en alta de comercio:",error.stack);
-        return fallBack("Ocurrió un error, por favor reintenta!");
+        emailLogger.error("DNI ERROR > " + error.stack);
+        return fallBack("Ocurrió un error al recibir la imagen. Intentá de nuevo o escribí *cancelar*.");
       }
     }
   )
@@ -171,21 +161,22 @@ const flowAltaComercio = addKeyword("solicitar", { sensitive: false })
     "¡Excelente! He derivado toda la documentación a un asesor, el cual te contactará. ¡Muchas gracias por completar el proceso por este medio!"
   )
   .addAction(
-    async (ctx) => {
+    async (ctx, { state }) => {
       try {
+        const comercio = state.getMyState();
         const data = JSON.stringify(comercio, null, 2);
         fs.writeFileSync("./comercios/" + ctx.from + "/" + ctx.from + ".json", data);
 
-        const merchantImagesDirectory = "./comercios/" + ctx.from; 
+        const merchantImagesDirectory = "./comercios/" + ctx.from;
 
         const files = (await fs.readdir(merchantImagesDirectory))
-          .filter(file => file.endsWith('.jpeg'))
+          .filter(file => file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png'))
           .map(file => ({
             path: join(merchantImagesDirectory, file),
             name: file
           }));
 
-        await sendEmail(files);
+        await sendEmail(comercio, files);
       } catch (error) {
         emailLogger.error("Ocurrió un error, por favor reintenta!", error.stack);
       }

@@ -1,4 +1,5 @@
 import { addKeyword } from '@builderbot/bot';
+import { checkEscape } from '../utils/flowGuard';
 import nodemailer from "nodemailer";
 import { readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import fs from 'fs-extra';
@@ -16,12 +17,12 @@ async function sendEmail(state: any, files: { path: string; name: string; }[]) {
         const problema = state.getMyState();
 
         const transporter = nodemailer.createTransport({
-            host: "sd-1973625-l.dattaweb.com",
-            port: 587,
+            host: process.env.EMAIL_HOST,
+            port: +(process.env.EMAIL_PORT ?? 587),
             secure: false,
             auth: {
-                user: "facundogonzalez@tarjetadata.com.ar",
-                pass: "Facundo2000@*",
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
             },
         });
 
@@ -36,8 +37,8 @@ async function sendEmail(state: any, files: { path: string; name: string; }[]) {
         Se adjunta una foto del error en el POS.`;
 
         const mailOptions = {
-            from: "facundogonzalez@tarjetadata.com.ar",
-            to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacongonzalez@gmail.com",
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_TO,
             subject: "Reporte de problema con POS",
             html: bodyHtml,
             attachments: attachments,
@@ -69,16 +70,18 @@ async function createDirectoryIfNotExists(directory: string) {
 }
 
 // Definimos un keyword para problemas con POS
-const flowProblemaPOS = addKeyword('POS', { sensitive: false })
-    .addAnswer('Por favor, describe el problema que estás teniendo con el POS.',
+const flowProblemaPOS = addKeyword("__flow_pos__", { sensitive: false })
+    .addAnswer('Vamos a reportar el problema con tu POS. En cualquier momento podés escribir *cancelar* para salir.\n\nDescribí el problema que estás teniendo:',
         { capture: true },
-        async (ctx, { fallBack, state }) => {
+        async (ctx, { endFlow, state }) => {
+            if (await checkEscape(ctx, state, endFlow, 'intentos_desc')) return;
             await state.update({ descripcion: ctx.body });
         }
     )
-    .addAnswer('*Ahora, por favor envíame una foto del error que aparece en el POS.*',
+    .addAnswer('*Ahora enviame una foto del error que aparece en el POS:*',
         { capture: true },
-        async (ctx, { fallBack, provider, state }) => {
+        async (ctx, { fallBack, endFlow, provider, state }) => {
+            if (await checkEscape(ctx, state, endFlow, 'intentos_foto')) return;
             const merchantImagesDirectory = `./comercios/${ctx.from}/pos`;
             await createDirectoryIfNotExists(merchantImagesDirectory);
             try {
@@ -86,7 +89,7 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
                 await state.update({ errorPhoto: localPath });
             } catch (error) {
                 emailLogger.error("Error al guardar la imagen > " + error.stack);
-                return fallBack("Ocurrió un error, por favor reintenta!");
+                return fallBack("Ocurrió un error al recibir la imagen. Intentá de nuevo o escribí *cancelar*.");
             }
         }
     )
@@ -96,7 +99,7 @@ const flowProblemaPOS = addKeyword('POS', { sensitive: false })
             const imagesDirectory = `./comercios/${ctx.from}/pos`;
 
             const files = (await fs.readdir(imagesDirectory))
-                .filter(file => file.endsWith('.jpeg'))
+                .filter(file => file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png'))
                 .map(file => ({
                     path: join(imagesDirectory, file),
                     name: file

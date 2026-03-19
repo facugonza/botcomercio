@@ -1,4 +1,6 @@
 // logger.ts
+import dotenv from 'dotenv';
+dotenv.config();
 import log4js from 'log4js';
 
 log4js.configure({
@@ -16,12 +18,12 @@ log4js.configure({
             sender: 'facundogonzalez@tarjetadata.com.ar',
             subject: 'ERROR GRAVE EN DATABOT COMERCIOS',
             SMTP: {
-                host: 'sd-1973625-l.dattaweb.com',
-                secure: true, // usa SSL
+                host: process.env.EMAIL_HOST,
+                secure: true,
                 port: 465,
                 auth: {
-                    user: 'facundogonzalez@tarjetadata.com.ar',
-                    pass: 'Facundo2000@*' // ¡Nunca guardes contraseñas en texto plano en un código de producción!
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
                 }
             }
         }

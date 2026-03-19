@@ -1,7 +1,7 @@
 import { addKeyword } from '@builderbot/bot';
 
 // Flujo para mostrar los requisitos de registro de un comercio
-const flowRequisitosComercio = addKeyword("requisitos", { sensitive: false })
+const flowRequisitosComercio = addKeyword("__flow_requisitos__", { sensitive: false })
   .addAnswer(
     "Para registrar tu comercio, necesitas los siguientes documentos:\n" +
     "– CUIT del comercio\n" +

@@ -17,7 +17,7 @@ const createGroup = async ({ numeroTelefono, whatsappId, groupCode, comercioCUIT
     comercioCUIT: comercioCUIT
   });
 
-  const url = `http://200.70.56.203:8021/AppMovil/GroupsController?${params.toString()}`;
+  const url = `${process.env.API_BASE_URL}/AppMovil/GroupsController?${params.toString()}`;
   console.log('URL de solicitud:', url);
 
   try {

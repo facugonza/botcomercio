@@ -17,7 +17,7 @@ const desvincularComercio = async (datosCliente: DatosComercio): Promise<any> =>
     try {
         const config: AxiosRequestConfig = {
             method: "POST",
-            url: "http://200.70.56.203:8021/AppMovil/DesvincularComercio",
+            url: `${process.env.API_BASE_URL}/AppMovil/DesvincularComercio`,
             headers: {
                 "Content-Type": "application/json",
             },
@@ -27,12 +27,12 @@ const desvincularComercio = async (datosCliente: DatosComercio): Promise<any> =>
         const response: AxiosResponse = await axios(config);
         return response.data;
     } catch (e) {
-        emailLogger.log("ERROR desvincular Cuenta: " + e.stack);
+        emailLogger.error("ERROR desvincular Cuenta: " + e.stack);
         return null;
     }
 };
 
-const flowDesvincular = addKeyword("desvincular", { sensitive: false })
+const flowDesvincular = addKeyword("__flow_desvincular__", { sensitive: false })
     .addAnswer(
         "¿Confirmas desvincular este número de teléfono ? Responde *SI o NO* para confirmar o cancelar.",
         { capture: true },
@@ -44,23 +44,24 @@ const flowDesvincular = addKeyword("desvincular", { sensitive: false })
             );
                       
             const comercio = await findMerchant(ctx);
-            if (Object.keys(comercio).length > 0) {
-                if (ctx.body.toLowerCase() === "si") {
-                    const datosComercio: DatosComercio = {
-                        numeroTelefono: ctx.from,
-                        cuit: comercio.cuit
-                    };
-                    const desvincularCliente = await desvincularComercio(datosComercio);
-                    setComercioData(ctx, {});
-                    if (desvincularCliente != null && desvincularCliente.success) {
-                        return endFlow(`Desvinculamos este número (*+${ctx.from}*) de Teléfono del comercio *:${comercio.descripcion}* !!`);
-                    } else {
-                        return flowDynamic("*No se pudo procesar la solicitud en este momento .... reintenta luego !!*");
-                    }
+            if (Object.keys(comercio).length === 0) {
+                return endFlow("No encontramos un comercio vinculado a este número. Si necesitás ayuda, escribime nuevamente.");
+            }
+            if (ctx.body.toLowerCase() === "si") {
+                const datosComercio: DatosComercio = {
+                    numeroTelefono: ctx.from,
+                    cuit: comercio.cuit
+                };
+                const desvincularCliente = await desvincularComercio(datosComercio);
+                setComercioData(ctx, {});
+                if (desvincularCliente != null && desvincularCliente.success) {
+                    return endFlow(`Desvinculamos este número (*+${ctx.from}*) de Teléfono del comercio *:${comercio.descripcion}* !!`);
                 } else {
-                    setComercioData(ctx, {});
-                    return endFlow("*OPERACIÓN CANCELADA*. Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tienes suerte, tienes DATA!*");
+                    return flowDynamic("*No se pudo procesar la solicitud en este momento .... reintenta luego !!*");
                 }
+            } else {
+                setComercioData(ctx, {});
+                return endFlow("*OPERACIÓN CANCELADA*. Si tienes más preguntas o necesitas ayuda, no dudes en contactarme nuevamente. *¡Tienes suerte, tienes DATA!*");
             }
         }
     );

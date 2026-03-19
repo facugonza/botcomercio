@@ -1,4 +1,5 @@
 import { addKeyword } from '@builderbot/bot';
+import { checkEscape } from '../utils/flowGuard';
 import nodemailer from "nodemailer";
 import { readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import fs from 'fs-extra';
@@ -16,12 +17,12 @@ async function sendEmail(ctx, state: any, files: { path: string; name: string; }
     const cupon = state.getMyState().cupon;
 
     const transporter = nodemailer.createTransport({
-      host: "sd-1973625-l.dattaweb.com",
-      port: 587,
+      host: process.env.EMAIL_HOST,
+      port: +(process.env.EMAIL_PORT ?? 587),
       secure: false,
       auth: {
-        user: "facundogonzalez@tarjetadata.com.ar",
-        pass: "Facundo2000@*",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -44,8 +45,8 @@ async function sendEmail(ctx, state: any, files: { path: string; name: string; }
     Se adjunta el cupon adjuntado por comercio.`;
 
     const mailOptions = {
-      from: "facundogonzalez@tarjetadata.com.ar",
-      to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacongonzalez@gmail.com",
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_TO,
       subject: "Solicitud de Validación de Cupón - Número de Cupón: " + state.getMyState().numero + " de comercio N° " +comercio.nroempresa ,
       html: bodyHtml,
       attachments: attachments,
@@ -76,71 +77,73 @@ async function createDirectoryIfNotExists(directory: string) {
 }
 
 // Flujo de alta de comercio y validación de cupón
-const flowValidarCupon = addKeyword("cupon", { sensitive: false })
+const flowValidarCupon = addKeyword("__flow_cupon__", { sensitive: false })
   .addAnswer(
-    "Perfecto !! Para validar un cupón, por favor, proporciona el número de cupón.",
+    "Perfecto! Para validar un cupón necesito algunos datos. En cualquier momento podés escribir *cancelar* para salir.\n\nProporciona el número de cupón:",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
       await state.clear();
+      if (await checkEscape(ctx, state, endFlow, 'intentos_numero')) return;
       const cuponRegex = /^\d+$/;
       if (cuponRegex.test(ctx.body)) {
-          await state.update({ numero: ctx.body });
-          const comercio = await findMerchant(ctx);
-        } else {
-          return fallBack("¿Puedes verificar el número de cupón ingresado? Debe ser un número válido. Gracias.");
+        await state.update({ numero: ctx.body });
+      } else {
+        return fallBack("¿Podés verificar el número de cupón? Debe ser solo números. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "Gracias! Ahora necesito la fecha del cupón (DD/MM/AAAA).",
+    "Ahora necesito la fecha del cupón (DD/MM/AAAA):",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_fecha')) return;
       const fechaRegex = /^\d{2}\/\d{2}\/\d{4}$/;
       if (fechaRegex.test(ctx.body)) {
         await state.update({ fecha: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar la fecha ingresada? Debe tener el formato DD/MM/AAAA. Gracias.");
+        return fallBack("¿Podés verificar la fecha? Debe tener el formato DD/MM/AAAA. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "Por favor, proporciona el número de tarjeta asociado al cupón (últimos 4 dígitos).",
+    "Los últimos 4 dígitos del número de tarjeta:",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_tarjeta')) return;
       const tarjetaRegex = /^\d{4}$/;
       if (tarjetaRegex.test(ctx.body)) {
         await state.update({ numeroTarjeta: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar el número de tarjeta ingresado? Debe ser un número de 4 dígitos. Gracias.");
+        return fallBack("¿Podés verificar? Deben ser exactamente 4 dígitos. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "Finalmente, ¿cuál es el importe del cupón? (Ejemplo: 1234.56)",
+    "¿Cuál es el importe del cupón? (Ejemplo: 1234.56)",
     { capture: true },
-    async (ctx, { fallBack, state }) => {
+    async (ctx, { fallBack, endFlow, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_importe')) return;
       const importeRegex = /^\d+(\.\d{1,2})?$/;
       if (importeRegex.test(ctx.body)) {
         await state.update({ importe: ctx.body });
       } else {
-        return fallBack("¿Puedes verificar el importe ingresado? Debe ser un número válido. Gracias.");
+        return fallBack("¿Podés verificar el importe? Debe ser un número válido. Escribí *cancelar* para salir.");
       }
     }
   )
   .addAnswer(
-    "*Por favor, envíame una foto del cupón.* (Esto es obligatorio)",
+    "*Por favor, enviame una foto del cupón.* (Obligatorio)",
     { capture: true },
-    async (ctx, { fallBack, provider, state }) => {
+    async (ctx, { fallBack, endFlow, provider, state }) => {
+      if (await checkEscape(ctx, state, endFlow, 'intentos_foto')) return;
       const merchantImagesDirectory = `./comercios/${ctx.from}/cupon`;
       await createDirectoryIfNotExists(merchantImagesDirectory);
       try {
         const localPath = await provider.saveFile(ctx, { path: merchantImagesDirectory });
-        console.log("CUPÓN > " + localPath);
         await state.update({ cuponPhoto: localPath });
-        return;
       } catch (error) {
         logger.error("CUPÓN ERROR > " + error.stack);
-        return fallBack("Ocurrió un error, por favor reintenta!");
+        return fallBack("Ocurrió un error al recibir la imagen. Intentá de nuevo o escribí *cancelar*.");
       }
     }
   )
@@ -153,7 +156,7 @@ const flowValidarCupon = addKeyword("cupon", { sensitive: false })
         const merchantImagesDirectory = `./comercios/${ctx.from}/cupon`;
 
         const files = (await fs.readdir(merchantImagesDirectory))
-          .filter(file => file.endsWith('.jpeg'))
+          .filter(file => file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png'))
           .map(file => ({
             path: join(merchantImagesDirectory, file),
             name: file

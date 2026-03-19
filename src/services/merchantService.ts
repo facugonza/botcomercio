@@ -5,8 +5,8 @@ import axios from "axios";
 import { emailLogger } from '../logger/logger';
 import { getComercioData, setComercioData } from "../models/merchantDATA";
 
-const API_URL_VERIFICAR_COMERCIO = "http://200.70.56.203:8021/AppMovil/Comercio?nroTelefono=";
-const API_URL_VERIFICAR_COMERCIO_BKP = "http://200.70.56.203:8021/AppMovil/Comercio?nroTelefono=";
+const API_URL_VERIFICAR_COMERCIO = `${process.env.API_BASE_URL}/AppMovil/Comercio?nroTelefono=`;
+const API_URL_VERIFICAR_COMERCIO_BKP = `${process.env.API_BASE_URL}/AppMovil/Comercio?nroTelefono=`;
 
 // Función para verificar si un comercio está registrado usando su número de comercio
 const isRegisterMerchant = async (merchantNumber: string): Promise<any> => {
