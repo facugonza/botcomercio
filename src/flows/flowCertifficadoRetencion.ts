@@ -3,7 +3,11 @@ import { setComercioData } from '../models/merchantDATA';
 import { findMerchant } from '../services/merchantService';
 import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
-import { emailLogger } from '~/logger/logger';
+import { logger, emailLogger } from '~/logger/logger';
+import axios from 'axios';
+import fs from 'fs';
+import { tmpdir } from 'os';
+import path from 'path';
 
 // Define un tipo para el cliente si no existe ya
 interface Cliente {
@@ -17,7 +21,7 @@ interface Cliente {
 const flowUltimaLiquidacion = addKeyword("__flow_retencion__", { sensitive: false })
     .addAnswer(".",
         { delay: 500 },
-        async (ctx: any, { endFlow, flowDynamic }: any) => {
+        async (ctx: any, { endFlow, flowDynamic, provider }: any) => {
             
             databaseLogger.addLog(
                 ctx.from,
@@ -34,11 +38,17 @@ const flowUltimaLiquidacion = addKeyword("__flow_retencion__", { sensitive: fals
                         }]);
                         
                         const resumenURL = `${process.env.API_PUBLIC_URL}/AppMovil/ComercioCertPDF?certificado=${comercio.lastcertificado}`;
-                        
-                        await flowDynamic([{
-                            body: `Certificado N° ${comercio.lastcertificado}`,
-                            media: resumenURL,
-                        }]);
+
+                        const response = await axios.get(resumenURL, { responseType: 'arraybuffer', timeout: 60000 });
+
+                        if (!response.headers['content-type']?.includes('pdf')) {
+                            throw new Error("La URL no devolvió un PDF válido");
+                        }
+
+                        const tempFile = path.join(tmpdir(), `Certificado-${comercio.lastcertificado}.pdf`);
+                        fs.writeFileSync(tempFile, Buffer.from(response.data));
+                        await provider.sendFile(ctx.from, tempFile);
+                        fs.unlinkSync(tempFile);
                     }else {
                         await flowDynamic([{
                             body: `No se encontraron certificados Generados a la fecha.`
@@ -47,7 +57,8 @@ const flowUltimaLiquidacion = addKeyword("__flow_retencion__", { sensitive: fals
 
                 } catch (error) {
                     await flowDynamic([{ body: "En estos momentos no puedo procesar la opción solicitada. *Reintenta más tarde.*" }]);
-                    emailLogger.error(error);
+                    logger.error("Error obteniendo Certificado Retencion: " + error.stack);
+                    emailLogger.error("Error obteniendo Certificado Retencion", error);
                 }
 
                 setComercioData(ctx, {});

@@ -18,7 +18,7 @@ import databaseLogger from '../logger/databaseLogger';
 import acciones from '../models/actions';
 import { classifyIntent } from '../services/aiService';
 
-const opcionesComercio = ["LIQUIDACION", "CERTIFICADO", "ASESOR", "VALIDAR", "POS", "DESVINCULAR"];
+const opcionesComercio = ["LIQUIDACION", "CERTIFICADO", "ASESOR", "VALIDAR", "POS", "DESVINCULAR", "MENU"];
 const opcionesNoComercio = ["VINCULAR", "INFORMACION"];
 
 const descripciones = {
@@ -28,6 +28,7 @@ const descripciones = {
     VALIDAR:      "quiere validar o consultar un cupón de venta manual",
     POS:          "tiene un problema con su terminal o equipo POS",
     DESVINCULAR:  "quiere desvincular o quitar este número de teléfono del comercio",
+    MENU:         "pregunta qué puede hacer el bot, qué opciones tiene disponibles, qué información puede consultar, o pide un menú de ayuda",
     VINCULAR:     "ya es comercio registrado y quiere vincular este número de teléfono",
     INFORMACION:  "no está registrado como comercio y quiere información para adherirse",
 };
@@ -62,6 +63,7 @@ const flowMain = addKeyword(EVENTS.WELCOME)
           if (intencion === 'VALIDAR')     return gotoFlow(flowValidarCupon);
           if (intencion === 'POS')         return gotoFlow(flowProblemaPOS);
           if (intencion === 'DESVINCULAR') return gotoFlow(flowDesvincular);
+          if (intencion === 'MENU')        return gotoFlow(flowSoyComercio);
 
           return gotoFlow(flowSoyComercio);
         } else {

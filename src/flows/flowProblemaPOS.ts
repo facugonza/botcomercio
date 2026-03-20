@@ -61,7 +61,7 @@ async function sendEmail(state: any, files: { path: string; name: string; }[]) {
 async function createDirectoryIfNotExists(directory: string) {
     try {
         if (!existsSync(directory)) {
-            mkdirSync(directory);
+            mkdirSync(directory, { recursive: true });
         }
     } catch (error) {
         logger.error("Errror > createDirectoryIfNotExists ",error.stack);
