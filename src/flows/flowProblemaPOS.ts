@@ -16,14 +16,12 @@ async function sendEmail(state: any, files: { path: string; name: string; }[]) {
         const problema = state.getMyState();
 
         const transporter = nodemailer.createTransport({
-            host: "sd-1973625-l.dattaweb.com",
-            port: 587,
-            secure: false,
-            auth: {
-                user: "facundogonzalez@tarjetadata.com.ar",
-                pass: "Facundo2000@*",
-            },
-        });
+        service: 'gmail',
+        auth: {
+          user: 'databotnotificacion@gmail.com',
+          pass: 'elewelhwaekzdmhl',
+        }
+      });
 
         const attachments = files.map((file) => ({
             filename: file.name,
@@ -36,7 +34,7 @@ async function sendEmail(state: any, files: { path: string; name: string; }[]) {
         Se adjunta una foto del error en el POS.`;
 
         const mailOptions = {
-            from: "facundogonzalez@tarjetadata.com.ar",
+            from: "databotnotificacion@gmail.com",
             to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacongonzalez@gmail.com",
             subject: "Reporte de problema con POS",
             html: bodyHtml,

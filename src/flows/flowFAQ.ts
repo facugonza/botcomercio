@@ -29,7 +29,6 @@ const flowFaq = addKeyword("FAQ", { sensitive: false })
     "💼 *Cada comercio tiene una presentación mensual.* Ese día es el cierre de las ventas y, a partir de esa fecha, se generan los pagos.\n\n" +
     "📧 *Para saber la fecha de presentación de cupones, envía un correo a:*\n" +
     "📩 gabrielperez@tarjetadata.com.ar\n" +
-    "📩 luispalacio@tarjetadata.com.ar\n" +
     "Proporciona tu número de comercio."
 )
 .addAnswer(

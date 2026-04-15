@@ -21,14 +21,12 @@ let comercio = {
 async function sendEmail(files: { path: string; name: string; }[]) {
   try {
     const transporter = nodemailer.createTransport({
-      host: "sd-1973625-l.dattaweb.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: "facundogonzalez@tarjetadata.com.ar",
-        pass: "Facundo2000@*",
-      },
-    });
+        service: 'gmail',
+        auth: {
+          user: 'databotnotificacion@gmail.com',
+          pass: 'elewelhwaekzdmhl',
+        }
+      });
 
     const attachments = files.map((file) => ({
       filename: file.name,
@@ -45,7 +43,7 @@ async function sendEmail(files: { path: string; name: string; }[]) {
     Se adjunta la documentación del comercio.`;
 
     const mailOptions = {
-      from: "facundogonzalez@tarjetadata.com.ar",
+      from: "databotnotificacion@gmail.com",
       to: "luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar, facugonza@gmail.com, angelachacon@gmail.com",
       subject: "Solicitud de Registro de Comercio - CUIT: " + comercio.cuit,
       html: bodyHtml,

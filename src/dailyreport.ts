@@ -113,19 +113,17 @@ async function sendEmail(): Promise<void> {
     emailContent += '</table>';
 
     const transporter = nodemailer.createTransport({
-      host: 'sd-1973625-l.dattaweb.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'facundogonzalez@tarjetadata.com.ar',
-        pass: 'Facundo2000@*', // Usa variables de entorno en producción
-      }
-    });
+        service: 'gmail',
+        auth: {
+          user: 'databotnotificacion@gmail.com',
+          pass: 'elewelhwaekzdmhl',
+        }
+      });
 
     const todayDate = getFormattedDate();
     const mailOptions = {
-      from: 'facundogonzalez@tarjetadata.com.ar',
-      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com, luispalacio@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar,',
+      from: 'databotnotificacion@gmail.com',
+      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com,  gracielalorenzo@tarjetadata.com.ar, GABRIELPEREZ@tarjetadata.com.ar,',
       subject: `Cantidad de Comercios Atendidos hoy: (${todayDate})`,
       html: emailContent,
     };
