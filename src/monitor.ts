@@ -69,7 +69,7 @@ const checkAppStatus = (): void => {
 const checkHealthEndpoint = (): void => {
     const options = {
         hostname: 'localhost',
-        port: 3099,
+        port: 8022,
         path: '/health',
         method: 'GET',
         timeout: 30000 // 30 segundos

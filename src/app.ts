@@ -24,7 +24,7 @@ import flowRetencion from './flows/flowCertifficadoRetencion';
 //import flowReclamo from "./flows/flowReclamo";
 //import flowDesvincular from "./flows/flowDesvincular";
 
-const PORT: number = +(process.env.PORT ?? 3099);
+const PORT: number = +(process.env.PORT ?? 8022);
 
 // Configuración para la base de datos MySQL
 const MYSQL_DB_HOST = process.env.MYSQL_DB_HOST ?? "localhost";

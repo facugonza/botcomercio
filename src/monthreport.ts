@@ -100,7 +100,7 @@ async function sendEmail() {
 
     const mailOptions = {
       from: 'databotnotificacion@gmail.com',
-      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com',
+      to: 'angelachacongonzalez@gmail.com, facugonza@gmail.com, gracielalorenzo@tarjetadata.com.ar',
       subject: `Informe Mensual de Comercios Atendidos`,
       html: emailContent,
     };
